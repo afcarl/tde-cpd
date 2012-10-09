@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 PROJECT( rlfd_segmentation )
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "-g -pg -lpthread -std=gnu++0x -Wall")
+    set(CMAKE_CXX_FLAGS "-g -pg -lpthread -std=c++0x -Wall")
     set(CMAKE_SHARED_LINKER_FLAGS "-pg")
 endif()
 
