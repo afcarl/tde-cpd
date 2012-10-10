@@ -12,9 +12,6 @@ include_directories(${EIGEN_INCLUDE_DIR})
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-ADD_LIBRARY(segdhmm
-    src/DHMMSegmenter.cc)
-
 ADD_EXECUTABLE(run_segmentation src/RunSegmentation.cc)
-TARGET_LINK_LIBRARIES(run_segmentation ${EIGEN3_LIBS} segdhmm)
+TARGET_LINK_LIBRARIES(run_segmentation ${EIGEN3_LIBS})
 
