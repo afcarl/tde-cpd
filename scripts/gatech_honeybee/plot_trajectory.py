@@ -6,7 +6,7 @@ from matplotlib.colors import colorConverter
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
 
-data = np.loadtxt('../datasets/gatech_honeybee/sequence1.dat', dtype=np.dtype({'names':['x', 'y', 'mode'], 
+data = np.loadtxt('../../datasets/gatech_honeybee/sequence1.dat', dtype=np.dtype({'names':['x', 'y', 'mode'], 
   'formats':[np.double, np.double, 'S100']}))
 
 segments = [np.array(list(g)) for k, g in itertools.groupby(data, key=operator.itemgetter(2))]
