@@ -18,6 +18,7 @@
  * Boston, MA  02110-1301, USA.
  */
 #include <rlfd_segmentation/DHMMSegmenter.hh>
+#include <rlfd_segmentation/DelayEmbedding.hh>
 
 int main(void)
 {

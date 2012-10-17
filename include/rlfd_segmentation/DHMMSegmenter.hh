@@ -20,11 +20,12 @@
 #ifndef __DHMMSEGMENTER_H__
 #define __DHMMSEGMENTER_H__
 
-#include <numeric>
-#include <Eigen/Core>
 #include <rlfd_segmentation/Model.hh>
+
+#include <Eigen/Core>
 #include <deque>
 #include <memory>
+#include <numeric>
 
 namespace rlfd {
 /**
@@ -41,73 +42,73 @@ namespace rlfd {
 template <class WindowModel>
 class DHMMSegmenter
 {
-public:
-    DHMMSegmenter(unsigned W=50, double varsigma=0, double k=0);
-    virtual ~DHMMSegmenter() {};
+ public:
+  DHMMSegmenter(unsigned W=50, double varsigma=0, double k=0);
+  virtual ~DHMMSegmenter() {};
 
-private:
-    struct State {
-        State(double cpath, Model* model, Model* prototype): 
-            cpath(cpath), model(model), prototype(prototype) {}
+ private:
+  struct State {
+    State(double cpath, Model* model, Model* prototype): 
+        cpath(cpath), model(model), prototype(prototype) {}
 
-        // Cost of the c-path finishing at this state
-        double cpath;
+    // Cost of the c-path finishing at this state
+    double cpath;
 
-        // Model computed for this state. 
-        // Can be a PDF or delay embedding 
-        std::shared_ptr<Model> model;
+    // Model computed for this state. 
+    // Can be a PDF or delay embedding 
+    std::shared_ptr<Model> model;
 
-        // The prototype assigned to this state
-        std::shared_ptr<Model> prototype;
-    };
-    std::deque<State> states;
+    // The prototype assigned to this state
+    std::shared_ptr<Model> prototype;
+  };
+  std::deque<State> states;
 
-    // Maintain a history of the optimal paths costs
-    std::deque<double> opaths;
+  // Maintain a history of the optimal paths costs
+  std::deque<double> opaths;
 
-    double varsigma;
-    double k;
+  double varsigma;
+  double k;
 
-public:
-    /**
-     * Regularization constant C that subsumes varsigma and k
-     */
-    constexpr double GetRegularizer() { return 2*std::pow(varsigma, 2)*std::log(k); }
+ public:
+  /**
+   * Regularization constant C that subsumes varsigma and k
+   */
+  constexpr double GetRegularizer() { return 2*std::pow(varsigma, 2)*std::log(k); }
 
-    /**
-     * Add an observation (delay-embedded). 
-     * When the number of observations is sufficient
-     * to build a model, the segmentation will get 
-     * updated automatically
-     * @param x An observation vector 
-     */
-    void AddObservation(const Eigen::VectorXd& x)
-    {
-        // Compute a new model 
-        Model* latest_model = new WindowModel(); 
-        states.push_front(State(latest_model->distance(*(states[0].model)), latest_model, latest_model));
+  /**
+   * Add an observation (delay-embedded). 
+   * When the number of observations is sufficient
+   * to build a model, the segmentation will get 
+   * updated automatically
+   * @param x An observation vector 
+   */
+  void AddObservation(const Eigen::VectorXd& x)
+  {
+    // Compute a new model 
+    Model* latest_model = new WindowModel(); 
+    states.push_front(State(latest_model->distance(*(states[0].model)), latest_model, latest_model));
 
-        // t=0 to t-1
-        for (unsigned t = 1; t < states.size()-1; t++) {
-            // Cost for a constrained path finishing with the new model r
-            // starting at 0 and finishing at time step t 
-            states.front().cpath = latest_model->distance(*(states[t].model)) + std::min(states.front().cpath, opaths[t-1] + GetRegularizer()); 
-            if (states.front().cpath < opaths[t]) {
-                opaths[t] = states.front().cpath;
-                states[t].prototype = std::shared_ptr<Model>(latest_model); // Not sure if that makes sense
-            } 
-        }
-
-        // Compute the minimum cost for each state
-        for (unsigned s = 0; s < states.size(); s++) {
-            states[s].cpath = latest_model->distance(*(states[s].model)) + std::min(states[s].cpath, opaths.front() + GetRegularizer());
-        }
-
-        // Find the mininum cost constrained path
-        auto mincost_state = std::min_element(states.begin(), states.end(), [](const State& a, const State& b) { return a.cpath < b.cpath; });
-        opaths.push_front(mincost_state->cpath);
-        states.front().prototype = mincost_state->model; 
+    // t=0 to t-1
+    for (unsigned t = 1; t < states.size()-1; t++) {
+      // Cost for a constrained path finishing with the new model r
+      // starting at 0 and finishing at time step t 
+      states.front().cpath = latest_model->distance(*(states[t].model)) + std::min(states.front().cpath, opaths[t-1] + GetRegularizer()); 
+      if (states.front().cpath < opaths[t]) {
+        opaths[t] = states.front().cpath;
+        states[t].prototype = std::shared_ptr<Model>(latest_model); // Not sure if that makes sense
+      } 
     }
+
+    // Compute the minimum cost for each state
+    for (unsigned s = 0; s < states.size(); s++) {
+      states[s].cpath = latest_model->distance(*(states[s].model)) + std::min(states[s].cpath, opaths.front() + GetRegularizer());
+    }
+
+    // Find the mininum cost constrained path
+    auto mincost_state = std::min_element(states.begin(), states.end(), [](const State& a, const State& b) { return a.cpath < b.cpath; });
+    opaths.push_front(mincost_state->cpath);
+    states.front().prototype = mincost_state->model; 
+  }
 };
 
 } // namespace rlfd

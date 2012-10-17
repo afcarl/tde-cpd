@@ -17,20 +17,17 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#ifndef __MODEL_HH__
-#define __MODEL_HH__
+#ifndef __DELAYEMBEDDING_HH__
+#define __DELAYEMBEDDING_HH__
+
+#include <rlfd_segmentation/Model.hh>
 
 namespace rlfd {
-class Model {
+
+class DelayEmbedding : Model {
  public:
-  /**
-   * Compute the distance of the current model to another. 
-   * @param other Other model 
-   * @return The distance (unspecified if proper distance metric)
-   */
-  virtual double distance(const Model& other) const = 0;
+  double distance(const Model& other) const override { return 0; };
 };
 
 } // namespace rlfd
-
 #endif
