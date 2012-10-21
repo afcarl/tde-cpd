@@ -7,11 +7,14 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-find_package(Eigen REQUIRED)
+
+find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN_INCLUDE_DIR})
+
+find_package(Flann REQUIRED)
+include_directories(${FLANN_INCLUDE_DIR})
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 ADD_EXECUTABLE(run_segmentation src/RunSegmentation.cc)
-TARGET_LINK_LIBRARIES(run_segmentation ${EIGEN3_LIBS})
-
+TARGET_LINK_LIBRARIES(run_segmentation ${FLANN_LIBS})

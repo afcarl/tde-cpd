@@ -1,14 +1,14 @@
 #ifndef __GAMMA_TEST_H__
 #define __GAMMA_TEST_H__
 
-#include <Eigen/Core>
 #include <Eigen/Dense>
 #include <flann/flann.hpp>
 
 namespace rlfd {
+
 class GammaTest
 {
-public:
+ public:
   /**
    * @param nn The number of nearest neighbors to consider.  
    */
@@ -22,17 +22,17 @@ public:
    * is the slope of the regression line for the pairs coordinates (gamma, delta) and is a 
    * a good indicator of the complexity	of the surface defined by f. 
    */
-  Eigen::Vector2d estimate(const Eigen::MatrixXd& in, const Eigen::MatrixXd& out) {
+  Eigen::Vector2d estimate(const Eigen::MatrixXd& in, const Eigen::VectorXd& out) 
+  {
     // Type conversions. No memory duplication. 
-    flann::Matrix<double> input(in.data(), in.rows(), in.cols());
-    flann::Matrix<double> output(out.data(), out.rows(), out.cols());
-
+    // @fixme seems to be no way to avoid const_cast or data duplication
+    flann::Matrix<double> input(const_cast<double*>(in.data()), in.rows(), in.cols());
     flann::Index<flann::L2<double> > index(input, flann::KDTreeIndexParams(4));
 
     // Compute the k-nearest neighbors for every input points
-    flann::Matrix<int> indices(new int[query.rows*nn_], query.rows, nn_);
-    flann::Matrix<double> dists(new double[query.rows*nn_], query.rows, nn_);
-    index.knnSearch(query, indices, dists, nn_, flann::SearchParams(128));
+    flann::Matrix<int> indices(new int[input.rows*nn_], input.rows, nn_);
+    flann::Matrix<double> dists(new double[input.rows*nn_], input.rows, nn_);
+    index.knnSearch(input, indices, dists, nn_, flann::SearchParams(128));
 
     // Compute delta and gamma for a range of k
     Eigen::MatrixXd deltas(nn_, 2);
@@ -41,15 +41,15 @@ public:
       double average_input_dist = 0;
       double average_output_dist = 0;
       for (int i = 0; i < in.rows(); i++) {
-        int kthnn = indices[i][p-1];
-        average_input_dist += (in.row(kthnn) - in.row(i)).array().pow(2);
+        int kthnn = indices[i][p];
+        average_input_dist += (in.row(kthnn) - in.row(i)).norm();
 
         // note y_{N[i, k]} is not necessarily the kth 
         // nearest neighbour of yi in output space
-        average_output_dist += (out.row(kthnn) - out.row(i)).array().pow(2);
+        average_output_dist += std::pow((out[kthnn] - out[i]), 2);
       }
       average_input_dist = average_input_dist/in.rows();
-      average_output_dist = average_output_dist/out.rows();
+      average_output_dist = average_output_dist/in.rows();
 
       deltas(p, 0) = average_input_dist;
       deltas(p, 1) = 1;
@@ -62,7 +62,7 @@ public:
     return deltas.fullPivHouseholderQr().solve(gammas);
   }
 
-private:
+ private:
   unsigned nn_;
 };
 }

@@ -19,10 +19,14 @@
  */
 #include <rlfd_segmentation/DHMMSegmenter.hh>
 #include <rlfd_segmentation/DelayEmbedding.hh>
+#include <rlfd_segmentation/GammaTest.hh>
 
 int main(void)
 {
-    rlfd::DHMMSegmenter<rlfd::DelayEmbedding> segmenter();
+  rlfd::DHMMSegmenter<rlfd::DelayEmbedding> segmenter();
+  rlfd::GammaTest test();
+  
+  test.estimate();
 
-    return 0;
+  return 0;
 }
