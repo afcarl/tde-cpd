@@ -20,13 +20,36 @@
 #include <rlfd_segmentation/DHMMSegmenter.hh>
 #include <rlfd_segmentation/DelayEmbedding.hh>
 #include <rlfd_segmentation/GammaTest.hh>
+#include <rlfd_segmentation/utils/Gnuplot.hh>
+
+#include <random>
 
 int main(void)
 {
   rlfd::DHMMSegmenter<rlfd::DelayEmbedding> segmenter();
   rlfd::GammaTest test();
   
-  test.estimate();
+  // Synthetic example 
+  // Generate 500 uniformly distributed points x in the range 
+  // [0, 2pi] and add uniformly distributed
+  // noise component with a variance of 0.075
+  std::random_device rd; 
+  std::mt19937 gen(rd());
+
+  const double pi = 3.14159265358979;
+  const int npoints = 500;
+  std::uniform_real_distribution<double> uniform(0.0, 2.0*pi);
+  std::normal_distribution<double> noise(0.0, std::sqrt(0.075));
+
+  std::vector<double> input(npoints);
+  std::vector<double> output(npoints);
+  for (int i = 0; i < npoints; i++) {
+      input[i] = uniform(gen);
+      output[i] = std::sin(input[i]) + noise(gen);   
+  }
+
+  rlfd::utils::Gnuplot gnuplot;
+  gnuplot(input, output); 
 
   return 0;
 }

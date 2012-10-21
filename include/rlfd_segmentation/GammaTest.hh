@@ -37,15 +37,14 @@ class GammaTest
     // Compute delta and gamma for a range of k
     Eigen::MatrixXd deltas(nn_, 2);
     Eigen::VectorXd gammas(nn_);
-    for (int p = 0; p < nn_; p++) {
+    for (unsigned p = 0; p < nn_; p++) {
       double average_input_dist = 0;
       double average_output_dist = 0;
       for (int i = 0; i < in.rows(); i++) {
-        int kthnn = indices[i][p];
-        average_input_dist += (in.row(kthnn) - in.row(i)).norm();
-
+        average_input_dist += dists[i][p];
         // note y_{N[i, k]} is not necessarily the kth 
         // nearest neighbour of yi in output space
+        int kthnn = indices[i][p];
         average_output_dist += std::pow((out[kthnn] - out[i]), 2);
       }
       average_input_dist = average_input_dist/in.rows();
