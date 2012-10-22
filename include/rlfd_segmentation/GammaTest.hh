@@ -41,12 +41,19 @@ class GammaTest
    * is the slope of the regression line for the pairs coordinates (gamma, delta) and is a 
    * a good indicator of the complexity	of the surface defined by f. 
    */
-  Eigen::Vector2d estimate(const Eigen::MatrixXd& in, const Eigen::VectorXd& out) 
+  Eigen::Vector2d operator()(const Eigen::MatrixXd& in, const Eigen::VectorXd& out) 
   {
+    std::cout << "rows cols in " << in.rows() << " " << in.cols() << std::endl;
+    std::cout << "in last " << in(in.rows()-1, 0) << std::endl; 
+
     // Type conversions. No memory duplication. 
     // @fixme seems to be no way to avoid const_cast or data duplication
     flann::Matrix<double> input(const_cast<double*>(in.data()), in.rows(), in.cols());
-    flann::Index<flann::L2<double> > index(input, flann::KDTreeIndexParams(4));
+    std::cout << "input last " << input[in.rows()-1][0] << std::endl;
+   
+    flann::Index<flann::L2<double> > index(input, flann::KDTreeSingleIndexParams());
+    std::cerr << "Building index" << std::endl;
+    index.buildIndex();
 
     // Compute the k-nearest neighbors for every input points
     flann::Matrix<int> indices(new int[input.rows*nn_], input.rows, nn_);
@@ -78,6 +85,11 @@ class GammaTest
     // The intercept of the regression line converges 
     // in probability to var(r) as M goes to infinity.
     return deltas.fullPivHouseholderQr().solve(gammas);
+  }
+
+  inline Eigen::Vector2d operator()(const std::vector<double>& in, const std::vector<double>& out)
+  {
+    return this->operator()(Eigen::VectorXd::Map(&in[0], in.size()), Eigen::VectorXd::Map(&out[0], out.size()));
   }
 
  private:

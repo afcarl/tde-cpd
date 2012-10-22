@@ -27,8 +27,6 @@
 int main(void)
 {
   rlfd::DHMMSegmenter<rlfd::DelayEmbedding> segmenter();
-  rlfd::GammaTest test();
-  
   // Synthetic example 
   // Generate 500 uniformly distributed points x in the range 
   // [0, 2pi] and add uniformly distributed
@@ -51,5 +49,8 @@ int main(void)
   rlfd::utils::Gnuplot gnuplot;
   gnuplot(input, output); 
 
+  // Run the gamma test
+  rlfd::GammaTest gamma;
+  auto gamma_statistic = gamma(input, output);
   return 0;
 }
