@@ -31,7 +31,7 @@ class GammaTest
   /**
    * @param nn The number of nearest neighbors to consider.  
    */
-  GammaTest(unsigned nn=1) : nn_(nn+1) {};
+  GammaTest(unsigned nn=10) : nn_(nn+1) {};
   virtual ~GammaTest() {};
 
   /**
@@ -74,12 +74,13 @@ class GammaTest
       deltas(p, 0) = average_input_dist;
       deltas(p, 1) = 1;
       gammas[p] = average_output_dist;
+      std::cout << std::setprecision(15) << average_input_dist << " " << average_output_dist << std::endl;
     }
 
     // Compute the least square fit to the pairs deltas, gammas and find intercept. 
     // The intercept of the regression line converges 
     // in probability to var(r) as M goes to infinity.
-    return deltas.fullPivHouseholderQr().solve(gammas);
+    return deltas.fullPivLu().solve(gammas);
   }
 
   inline Eigen::Vector2d operator()(const std::vector<double>& in, const std::vector<double>& out)
