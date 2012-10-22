@@ -31,7 +31,7 @@ class GammaTest
   /**
    * @param nn The number of nearest neighbors to consider.  
    */
-  GammaTest(unsigned nn=10) : nn_(nn+1) {};
+  GammaTest(unsigned nn=20) : nn_(nn) {};
   virtual ~GammaTest() {};
 
   /**
@@ -41,7 +41,7 @@ class GammaTest
    * is the slope of the regression line for the pairs coordinates (gamma, delta) and is a 
    * a good indicator of the complexity	of the surface defined by f. 
    */
-  Eigen::Vector2d operator()(const Eigen::MatrixXd& in, const Eigen::VectorXd& out) 
+  Eigen::VectorXd operator()(const Eigen::MatrixXd& in, const Eigen::VectorXd& out) 
   {
     // Type conversions. No memory duplication. 
     // @fixme seems to be no way to avoid const_cast or data duplication
@@ -50,15 +50,14 @@ class GammaTest
     index.buildIndex();
 
     // Compute the k-nearest neighbors for every input points
-    flann::Matrix<int> indices(new int[input.rows*nn_], input.rows, nn_);
-    flann::Matrix<double> dists(new double[input.rows*nn_], input.rows, nn_);
-    index.knnSearch(input, indices, dists, nn_, flann::SearchParams(128));
+    flann::Matrix<int> indices(new int[input.rows*(nn_+1)], input.rows, (nn_+1));
+    flann::Matrix<double> dists(new double[input.rows*(nn_+1)], input.rows, (nn_+1));
+    index.knnSearch(input, indices, dists, (nn_+1), flann::SearchParams(128));
 
     // Compute delta and gamma for a range of k
     Eigen::MatrixXd deltas(nn_, 2);
     Eigen::VectorXd gammas(nn_);
-    for (unsigned p = 1; p < nn_; p++) {
-
+    for (unsigned p = 1; p < (nn_+1); p++) {
       double average_input_dist = 0.0;
       double average_output_dist = 0.0;
       for (int i = 0; i < in.rows(); i++) {
@@ -68,22 +67,20 @@ class GammaTest
         int kthnn = indices[i][p];
         average_output_dist += std::pow(out[kthnn] - out[i], 2);
       }
-      average_input_dist = average_input_dist/in.rows();
-      average_output_dist = average_output_dist/(2*in.rows());
+      average_input_dist = average_input_dist/((double) in.rows());
+      average_output_dist = average_output_dist/(2.0*in.rows());
 
-      deltas(p, 0) = average_input_dist;
-      deltas(p, 1) = 1;
-      gammas[p] = average_output_dist;
-      std::cout << std::setprecision(15) << average_input_dist << " " << average_output_dist << std::endl;
+      deltas(p-1, 0) = average_input_dist;
+      deltas(p-1, 1) = 1;
+      gammas[p-1] = average_output_dist;
     }
-
     // Compute the least square fit to the pairs deltas, gammas and find intercept. 
     // The intercept of the regression line converges 
     // in probability to var(r) as M goes to infinity.
-    return deltas.fullPivLu().solve(gammas);
+    return deltas.colPivHouseholderQr().solve(gammas);
   }
 
-  inline Eigen::Vector2d operator()(const std::vector<double>& in, const std::vector<double>& out)
+  inline Eigen::VectorXd operator()(const std::vector<double>& in, const std::vector<double>& out)
   {
     return this->operator()(Eigen::VectorXd::Map(&in[0], in.size()), Eigen::VectorXd::Map(&out[0], out.size()));
   }

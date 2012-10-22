@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 PROJECT( rlfd_segmentation )
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "-g -pg -lpthread -std=c++11 -Wno-enum-compare -Wall")
-    set(CMAKE_SHARED_LINKER_FLAGS "-pg")
+    set(CMAKE_CXX_FLAGS "-lpthread -std=c++11 -Wno-enum-compare -O2 -Wall")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)

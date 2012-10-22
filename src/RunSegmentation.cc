@@ -51,7 +51,7 @@ int main(void)
 
   // Run the gamma test
   rlfd::GammaTest gamma;
-  auto gamma_statistic = gamma(input, output);
-  std::cout << std::setprecision(15) << "Gradient " << gamma_statistic[0] << " " << "var(r) " << gamma_statistic[1] << std::endl;
+  auto gamma_statistic = gamma(Eigen::VectorXd::Map(&input[0], input.size()), Eigen::VectorXd::Map(&output[0], output.size()));
+  std::cout << gamma_statistic << std::endl;
   return 0;
 }
