@@ -46,11 +46,12 @@ int main(void)
       output[i] = std::sin(input[i]) + noise(gen);   
   }
 
-  rlfd::utils::Gnuplot gnuplot;
-  gnuplot(input, output); 
+//  rlfd::utils::Gnuplot gnuplot;
+//  gnuplot(input, output); 
 
   // Run the gamma test
   rlfd::GammaTest gamma;
   auto gamma_statistic = gamma(input, output);
+  std::cout << std::setprecision(15) << "Gradient " << gamma_statistic[0] << " " << "var(r) " << gamma_statistic[1] << std::endl;
   return 0;
 }

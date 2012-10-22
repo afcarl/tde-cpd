@@ -31,7 +31,7 @@ class GammaTest
   /**
    * @param nn The number of nearest neighbors to consider.  
    */
-  GammaTest(unsigned nn=10) : nn_(nn) {};
+  GammaTest(unsigned nn=1) : nn_(nn+1) {};
   virtual ~GammaTest() {};
 
   /**
@@ -43,16 +43,10 @@ class GammaTest
    */
   Eigen::Vector2d operator()(const Eigen::MatrixXd& in, const Eigen::VectorXd& out) 
   {
-    std::cout << "rows cols in " << in.rows() << " " << in.cols() << std::endl;
-    std::cout << "in last " << in(in.rows()-1, 0) << std::endl; 
-
     // Type conversions. No memory duplication. 
     // @fixme seems to be no way to avoid const_cast or data duplication
     flann::Matrix<double> input(const_cast<double*>(in.data()), in.rows(), in.cols());
-    std::cout << "input last " << input[in.rows()-1][0] << std::endl;
-   
     flann::Index<flann::L2<double> > index(input, flann::KDTreeSingleIndexParams());
-    std::cerr << "Building index" << std::endl;
     index.buildIndex();
 
     // Compute the k-nearest neighbors for every input points
@@ -63,18 +57,19 @@ class GammaTest
     // Compute delta and gamma for a range of k
     Eigen::MatrixXd deltas(nn_, 2);
     Eigen::VectorXd gammas(nn_);
-    for (unsigned p = 0; p < nn_; p++) {
-      double average_input_dist = 0;
-      double average_output_dist = 0;
+    for (unsigned p = 1; p < nn_; p++) {
+
+      double average_input_dist = 0.0;
+      double average_output_dist = 0.0;
       for (int i = 0; i < in.rows(); i++) {
         average_input_dist += dists[i][p];
         // note y_{N[i, k]} is not necessarily the kth 
         // nearest neighbour of yi in output space
         int kthnn = indices[i][p];
-        average_output_dist += std::pow((out[kthnn] - out[i]), 2);
+        average_output_dist += std::pow(out[kthnn] - out[i], 2);
       }
       average_input_dist = average_input_dist/in.rows();
-      average_output_dist = average_output_dist/in.rows();
+      average_output_dist = average_output_dist/(2*in.rows());
 
       deltas(p, 0) = average_input_dist;
       deltas(p, 1) = 1;
