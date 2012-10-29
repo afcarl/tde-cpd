@@ -21,6 +21,7 @@
 #include <rlfd_segmentation/DelayEmbedding.hh>
 #include <rlfd_segmentation/GammaTest.hh>
 #include <rlfd_segmentation/utils/Gnuplot.hh>
+#include <rlfd_segmentation/utils/AutoCorrelation.hh>
 
 #include <random>
 
@@ -50,8 +51,13 @@ int main(void)
 //  gnuplot(input, output); 
 
   // Run the gamma test
-  rlfd::GammaTest gamma;
-  auto gamma_statistic = gamma(Eigen::VectorXd::Map(&input[0], input.size()), Eigen::VectorXd::Map(&output[0], output.size()));
-  std::cout << gamma_statistic << std::endl;
+  //rlfd::GammaTest gamma;
+  //auto gamma_statistic = gamma(Eigen::VectorXd::Map(&input[0], input.size()), Eigen::VectorXd::Map(&output[0], output.size()));
+  //std::cout << gamma_statistic << std::endl;
+
+  // Compute the autocorrelation
+  Eigen::VectorXd acoeffs;
+  rlfd::utils::AutoCorrelation(Eigen::VectorXd::Map(&output[0], output.size()), acoeffs);
+
   return 0;
 }

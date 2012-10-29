@@ -14,9 +14,9 @@ find_package(Flann REQUIRED)
 include_directories(${FLANN_INCLUDE_DIR})
 
 find_package(FFTW REQUIRED)
-include_directories(${FFTW_INCLUDE_DIR})
+include_directories(${FFTW_INCLUDES})
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 ADD_EXECUTABLE(run_segmentation src/RunSegmentation.cc)
-TARGET_LINK_LIBRARIES(run_segmentation ${FLANN_LIBS} ${FFTW_LIBS})
+TARGET_LINK_LIBRARIES(run_segmentation ${FLANN_LIBS} ${FFTW_LIBRARIES})
