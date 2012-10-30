@@ -58,6 +58,10 @@ int main(void)
   // Compute the autocorrelation
   Eigen::VectorXd acoeffs;
   rlfd::utils::AutoCorrelation(Eigen::VectorXd::Map(&output[0], output.size()), acoeffs);
+  std::cout << acoeffs << std::endl;
+
+  std::cout << "Input to FFT" << std::endl;
+  std::cout << Eigen::VectorXd::Map(&output[0], output.size()) << std::endl; 
 
   return 0;
 }

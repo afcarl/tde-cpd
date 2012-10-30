@@ -34,11 +34,20 @@ namespace utils {
  */
 void AutoCorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff, int nlags=20)
 {
-  Eigen::VectorXd series = (inSeries.array() - inSeries.mean());
-  int n = series.size(); 
+  // Remove the mean 
+  EIGEN_ALIGN16 Eigen::VectorXd series = (inSeries.array() - inSeries.mean());
+
+
+  // FFTW is optimized for powers of 2.
+  int n = std::exp2(std::ceil(std::log2(series.size())));
+  // Half-complex format
   int nc = (n+1)/2;
-  double* out = new double[n];
-  double* power_spectrum = new double[nc]; 
+
+  // In the backward phase, the output will be multiplied by the number of elements
+  // in the input vector. Use fftw_malloc to ensure 16-bytes alignment.  
+  double scale = (1.0/nc);
+  double* out = (double*) fftw_malloc(sizeof(double)*n); 
+  double* power_spectrum = (double *) fftw_malloc(sizeof(double)*nc); 
 
   // Compute the Fourier transform of the input time series
   fftw_plan plan_forward = fftw_plan_r2r_1d(n, series.data(), out, FFTW_R2HC, FFTW_ESTIMATE);
@@ -47,17 +56,17 @@ void AutoCorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff,
 
   // Compute the Power Spectral Density (PSD)
   // The PSD is the squares of the absolute values of the DFT amplitudes.
-  power_spectrum[0] = out[0]*out[0];  // DC component
+  power_spectrum[0] = (out[0]*out[0])*scale;  // DC component
   
   for (int k = 1; k < nc; k++) { 
     // The DFT output satisfies the “Hermitian” redundancy: out[i] is the
     // conjugate of out[n-i]
-    power_spectrum[k] = out[k]*out[k] + out[n-k]*out[n-k];
+    power_spectrum[k] = (out[k]*out[k] + out[n-k]*out[n-k])*scale;
   }
 
   // Nyquist freq.
   if (n % 2 == 0) {
-    power_spectrum[n/2] = out[n/2]*out[n/2];
+    power_spectrum[n/2] = (out[n/2]*out[n/2])*scale;
   }
 
   // By the Wiener–Khinchin theorem, the power spectral density of a
@@ -66,10 +75,11 @@ void AutoCorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff,
   fftw_plan plan_backward = fftw_plan_r2r_1d(nc, power_spectrum, out, FFTW_HC2R, FFTW_ESTIMATE);
   fftw_execute(plan_backward);
   fftw_destroy_plan(plan_backward);
-
-  outCoeff = Eigen::VectorXd::Map(out, nc); 
+ 
+  outCoeff = (Eigen::VectorXd::Map(out, nc).array() * (1.0/out[0]));
+  fftw_free(out);
+  fftw_free(power_spectrum);
 }
-
 
 } // namespace utils
 } // namespace rlfd
