@@ -17,8 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#ifndef __GNUPLOT_H__
-#define __GNUPLOT_H__
+#ifndef __GNUPLOT_HH__
+#define __GNUPLOT_HH__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,9 +26,11 @@
 #include <errno.h>
 
 #include <stdexcept>
+#include <Eigen/Core>
 
 namespace rlfd {
 namespace utils {
+
 class Gnuplot 
 {
  public:
@@ -46,20 +48,26 @@ class Gnuplot
     fclose(gp_);
   }
 
-  void operator()(const std::vector<double>& ind, const std::vector<double>& dep)
+  void operator()(const Eigen::VectorXd& ind, const Eigen::VectorXd& dep)
   {
     // TODO Check if dim is the same
     fprintf(gp_, "plot '-' with points\n");
-    for (unsigned i = 0; i < ind.size(); i++) {
+    for (int i = 0; i < ind.size(); i++) {
       fprintf(gp_, "%.15le %.15le\n", ind[i], dep[i]); 
       fflush(gp_);
     }
     fprintf(gp_, "\ne\n");
   }
 
+  void operator()(const std::vector<double>& ind, const std::vector<double>& dep)
+  {
+    this->operator()(Eigen::VectorXd::Map(&ind[0], ind.size()), Eigen::VectorXd::Map(&dep[0], dep.size()));
+  }
+
  private:
   FILE* gp_;
 };
+
 } // namespace utils
 } // namespace rlfd
 #endif 
