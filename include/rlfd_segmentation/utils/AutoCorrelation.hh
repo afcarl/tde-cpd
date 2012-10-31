@@ -34,18 +34,22 @@ namespace utils {
  */
 void AutoCorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff, int nlags=20)
 {
-  // Remove the mean 
-  EIGEN_ALIGN16 Eigen::VectorXd series = (inSeries.array() - inSeries.mean());
-
-
   // FFTW is optimized for powers of 2.
-  int n = std::exp2(std::ceil(std::log2(series.size())));
-  // Half-complex format
+  int n = std::exp2(std::ceil(std::log2(inSeries.size())));
+
+  // Zero-pad so that the length is a power of two. Remove the mean 
+  EIGEN_ALIGN16 Eigen::VectorXd series(n);
+  series << (inSeries.array() - inSeries.mean()), Eigen::VectorXd(n - inSeries.size());
+
+  // RFFTW transforms are unnormalized. Applying the forward and then the
+  // backward transform will multiply the input by n.
+  double scale = (1.0/n);
+
+  // Negative-frequency amplitudes for real data are the complex conjugate of
+  // the positive-frequency amplitudes 
   int nc = (n+1)/2;
 
-  // In the backward phase, the output will be multiplied by the number of elements
-  // in the input vector. Use fftw_malloc to ensure 16-bytes alignment.  
-  double scale = (1.0/nc);
+  // Use fftw_malloc to ensure 16-bytes alignment.  
   double* out = (double*) fftw_malloc(sizeof(double)*n); 
   double* power_spectrum = (double *) fftw_malloc(sizeof(double)*nc); 
 
@@ -75,6 +79,7 @@ void AutoCorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff,
   fftw_plan plan_backward = fftw_plan_r2r_1d(nc, power_spectrum, out, FFTW_HC2R, FFTW_ESTIMATE);
   fftw_execute(plan_backward);
   fftw_destroy_plan(plan_backward);
+  fftw_cleanup();
  
   outCoeff = (Eigen::VectorXd::Map(out, nc).array() * (1.0/out[0]));
   fftw_free(out);
