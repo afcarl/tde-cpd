@@ -23,7 +23,6 @@
 #include <stdexcept>
 #include <Eigen/Core>
 #include <matio.h>
-#include <iostream>
 
 namespace rlfd {
 namespace utils {
