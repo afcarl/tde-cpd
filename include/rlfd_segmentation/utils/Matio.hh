@@ -42,7 +42,7 @@ class Matio
     }
   }
 
-  void Read(const std::string& name, Eigen::MatrixXd& out)
+  void Read(const std::string& name, Eigen::MatrixXd& out) throw(std::runtime_error)
   {
     matvar_t* matvar = Mat_VarRead(fp_, const_cast<char*>(name.c_str()));
     if (matvar == NULL) {
