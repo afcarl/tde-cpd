@@ -16,7 +16,13 @@ include_directories(${FLANN_INCLUDE_DIR})
 find_package(FFTW REQUIRED)
 include_directories(${FFTW_INCLUDES})
 
+find_package(Boost REQUIRED)
+include_directories(${BOOST_INCLUDE_DIR})
+
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 ADD_EXECUTABLE(run_segmentation src/RunSegmentation.cc)
-TARGET_LINK_LIBRARIES(run_segmentation ${FLANN_LIBS} ${FFTW_LIBRARIES})
+TARGET_LINK_LIBRARIES(run_segmentation ${FLANN_LIBS} ${FFTW_LIBRARIES} ${BOOST_LIBRARIES})
+
+ADD_EXECUTABLE(test_autocorrelation src/TestAutoCorrelation.cc)
+TARGET_LINK_LIBRARIES(test_autocorrelation ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
