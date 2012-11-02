@@ -21,6 +21,7 @@
 #define __AUTOCORRELATION_HH__
 
 #include <fftw3.h>
+#include <Eigen/Core>
 
 namespace rlfd {
 namespace utils {
@@ -39,11 +40,7 @@ void AutoCorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff,
 
   // Zero-pad so that the length is a power of two. Remove the mean 
   EIGEN_ALIGN16 Eigen::VectorXd series(n);
-  series << (inSeries.array() - inSeries.mean()), Eigen::VectorXd(n - inSeries.size());
-
-  // RFFTW transforms are unnormalized. Applying the forward and then the
-  // backward transform will multiply the input by n.
-  double scale = (1.0/n);
+  series << (inSeries.array() - inSeries.mean()), Eigen::VectorXd::Zero(n - inSeries.size());
 
   // Negative-frequency amplitudes for real data are the complex conjugate of
   // the positive-frequency amplitudes 
@@ -51,7 +48,7 @@ void AutoCorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff,
 
   // Use fftw_malloc to ensure 16-bytes alignment.  
   double* out = (double*) fftw_malloc(sizeof(double)*n); 
-  double* power_spectrum = (double *) fftw_malloc(sizeof(double)*nc); 
+  double* power_spectrum = (double *) fftw_malloc(sizeof(double)*n); 
 
   // Compute the Fourier transform of the input time series
   fftw_plan plan_forward = fftw_plan_r2r_1d(n, series.data(), out, FFTW_R2HC, FFTW_ESTIMATE);
@@ -60,28 +57,37 @@ void AutoCorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff,
 
   // Compute the Power Spectral Density (PSD)
   // The PSD is the squares of the absolute values of the DFT amplitudes.
-  power_spectrum[0] = (out[0]*out[0])*scale;  // DC component
-  
+  power_spectrum[0] = (out[0]*out[0]);  // DC component
   for (int k = 1; k < nc; k++) { 
     // The DFT output satisfies the “Hermitian” redundancy: out[i] is the
     // conjugate of out[n-i]
-    power_spectrum[k] = (out[k]*out[k] + out[n-k]*out[n-k])*scale;
+    power_spectrum[k] = (out[k]*out[k] + out[n-k]*out[n-k]);
   }
-
   // Nyquist freq.
   if (n % 2 == 0) {
-    power_spectrum[n/2] = (out[n/2]*out[n/2])*scale;
+    power_spectrum[n/2] = (out[n/2]*out[n/2]);
+  }
+
+  // Set imaginary part to 0 in preparation to ifft
+  for (int k = nc; k < n; k++) {
+    power_spectrum[k] = 0;
   }
 
   // By the Wiener–Khinchin theorem, the power spectral density of a
   // wide-sense-stationary random process is the Fourier transform of the
   // autocorrelation function.
-  fftw_plan plan_backward = fftw_plan_r2r_1d(nc, power_spectrum, out, FFTW_HC2R, FFTW_ESTIMATE);
+  fftw_plan plan_backward = fftw_plan_r2r_1d(n, power_spectrum, out, FFTW_HC2R, FFTW_ESTIMATE);
   fftw_execute(plan_backward);
   fftw_destroy_plan(plan_backward);
   fftw_cleanup();
  
-  outCoeff = (Eigen::VectorXd::Map(out, nc).array() * (1.0/out[0]));
+  // RFFTW transforms are unnormalized. Applying the forward and then the
+  // backward transform will multiply the input by n.
+  outCoeff = Eigen::VectorXd::Map(out, nc).array()*(1.0/n);
+
+  // Normalize the ACF as in Matlab, from Box, Jenkins, Reinsel, pages 30-34, 188. 
+  outCoeff = outCoeff.array() * (1.0/outCoeff[0]);
+
   fftw_free(out);
   fftw_free(power_spectrum);
 }
