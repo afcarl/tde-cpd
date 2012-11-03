@@ -19,7 +19,7 @@
  */
 #include <rlfd_segmentation/utils/Matio.hh>
 #include <rlfd_segmentation/utils/Gnuplot.hh>
-#include <rlfd_segmentation/utils/AutoCorrelation.hh>
+#include <rlfd_segmentation/utils/Autocorrelation.hh>
 
 #include <iostream>
 
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 
   // Compute the autocorrelation coefficients 
   Eigen::VectorXd acoeffs;
-  rlfd::utils::AutoCorrelation(ts, acoeffs); 
+  rlfd::utils::Autocorrelation(ts, acoeffs); 
 
   std::cout << "ACF" << std::endl << acoeffs << std::endl;
 

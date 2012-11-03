@@ -31,9 +31,8 @@ namespace utils {
  * @param ts The time series data
  * @param lag The autocorrelation lag
  * @param outCoeff Output vector for holding the autocorrelation coefficients
- * @param nlags The number of lags to compute
  */
-void AutoCorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff, int nlags=20)
+void Autocorrelation(const Eigen::VectorXd& inSeries, Eigen::VectorXd& outCoeff)
 {
   // FFTW is optimized for powers of 2.
   int n = std::exp2(std::ceil(std::log2(inSeries.size())));
