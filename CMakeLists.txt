@@ -24,5 +24,8 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 ADD_EXECUTABLE(run_segmentation src/RunSegmentation.cc)
 TARGET_LINK_LIBRARIES(run_segmentation ${FLANN_LIBS} ${FFTW_LIBRARIES} ${BOOST_LIBRARIES})
 
-ADD_EXECUTABLE(test_autocorrelation src/TestAutoCorrelation.cc)
+ADD_EXECUTABLE(test_autocorrelation src/TestAutocorrelation.cc)
 TARGET_LINK_LIBRARIES(test_autocorrelation ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
+
+ADD_EXECUTABLE(run_averagedisplacement src/RunAverageDisplacement.cc)
+TARGET_LINK_LIBRARIES(run_averagedisplacement ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
