@@ -21,7 +21,7 @@
 #include <rlfd_segmentation/DelayEmbedding.hh>
 #include <rlfd_segmentation/GammaTest.hh>
 #include <rlfd_segmentation/utils/Gnuplot.hh>
-#include <rlfd_segmentation/utils/AutoCorrelation.hh>
+#include <rlfd_segmentation/utils/Autocorrelation.hh>
 
 #include <random>
 
@@ -57,7 +57,7 @@ int main(void)
 
   // Compute the autocorrelation
   Eigen::VectorXd acoeffs;
-  rlfd::utils::AutoCorrelation(Eigen::VectorXd::Map(&output[0], output.size()), acoeffs);
+  rlfd::utils::Autocorrelation(Eigen::VectorXd::Map(&output[0], output.size()), acoeffs);
   std::cout << acoeffs << std::endl;
 
   std::cout << "Input to FFT" << std::endl;
