@@ -48,10 +48,20 @@ class Gnuplot
     fclose(gp_);
   }
 
+  void operator()(const Eigen::VectorXd& dep)
+  {
+    fprintf(gp_, "plot '-' with linespoints\n");
+    for (int i = 0; i < dep.size(); i++) {
+      fprintf(gp_, "%.15le\n", dep[i]); 
+      fflush(gp_);
+    }
+    fprintf(gp_, "\ne\n");
+  }
+
   void operator()(const Eigen::VectorXd& ind, const Eigen::VectorXd& dep)
   {
     // TODO Check if dim is the same
-    fprintf(gp_, "plot '-' with points\n");
+    fprintf(gp_, "plot '-' with linespoints\n");
     for (int i = 0; i < ind.size(); i++) {
       fprintf(gp_, "%.15le %.15le\n", ind[i], dep[i]); 
       fflush(gp_);
