@@ -20,7 +20,7 @@
 #ifndef __DELAYEMBEDDING_HH__
 #define __DELAYEMBEDDING_HH__
 
-#include <rlfd_segmentation/Model.hh>
+#include <rlfd/Model.hh>
 
 namespace rlfd {
 

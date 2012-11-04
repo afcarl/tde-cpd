@@ -17,9 +17,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#include <rlfd_segmentation/UnbiasedMultipleAutocorrelation.hh>
-#include <rlfd_segmentation/utils/Matio.hh>
-#include <rlfd_segmentation/utils/Gnuplot.hh>
+#include <rlfd/UnbiasedMultipleAutocorrelation.hh>
+#include <rlfd/utils/Matio.hh>
+#include <rlfd/utils/Gnuplot.hh>
 
 #include <string>
 #include <iostream>

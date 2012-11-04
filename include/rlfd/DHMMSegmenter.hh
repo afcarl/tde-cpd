@@ -20,7 +20,7 @@
 #ifndef __DHMMSEGMENTER_H__
 #define __DHMMSEGMENTER_H__
 
-#include <rlfd_segmentation/Model.hh>
+#include <rlfd/Model.hh>
 
 #include <Eigen/Core>
 #include <deque>

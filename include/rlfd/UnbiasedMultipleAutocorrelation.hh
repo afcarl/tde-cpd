@@ -21,7 +21,7 @@
 #define __UNBIASED_MULTIPLE_AUTOCORRELATION_HH__
 
 #include <Eigen/Core>
-#include <rlfd_segmentation/utils/Autocorrelation.hh>
+#include <rlfd/utils/Autocorrelation.hh>
 
 namespace rlfd {
 

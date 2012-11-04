@@ -17,11 +17,11 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#include <rlfd_segmentation/DHMMSegmenter.hh>
-#include <rlfd_segmentation/DelayEmbedding.hh>
-#include <rlfd_segmentation/GammaTest.hh>
-#include <rlfd_segmentation/utils/Gnuplot.hh>
-#include <rlfd_segmentation/utils/Autocorrelation.hh>
+#include <rlfd/DHMMSegmenter.hh>
+#include <rlfd/DelayEmbedding.hh>
+#include <rlfd/GammaTest.hh>
+#include <rlfd/utils/Gnuplot.hh>
+#include <rlfd/utils/Autocorrelation.hh>
 
 #include <random>
 
