@@ -24,6 +24,7 @@
 #include <rlfd/utils/Autocorrelation.hh>
 
 namespace rlfd {
+namespace delay {
 
 /**
  * This algorithm computes the delay times based on the method originally described in:
@@ -73,6 +74,7 @@ Eigen::VectorXd UnbiasedMultipleAutocorrelation(const Eigen::VectorXd& ts, int m
   return ad;
 } 
 
+} // namespace delay
 } // namespace rlfd
 
 #endif

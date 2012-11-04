@@ -24,6 +24,7 @@
 #include <flann/flann.hpp>
 
 namespace rlfd {
+namespace delay {
 
 class GammaTest
 {
@@ -88,6 +89,8 @@ class GammaTest
  private:
   unsigned nn_;
 };
-}
+
+} // namespace delay
+} // namespace rlfd
 
 #endif

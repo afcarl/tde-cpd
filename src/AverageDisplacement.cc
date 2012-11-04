@@ -17,9 +17,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#include <rlfd/UnbiasedMultipleAutocorrelation.hh>
 #include <rlfd/utils/Matio.hh>
 #include <rlfd/utils/Gnuplot.hh>
+#include <rlfd/delay/UnbiasedMultipleAutocorrelation.hh>
 
 #include <string>
 #include <iostream>
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
   matio.Close();
 
   // Compute the S_m^2 statistics for a range of tau values
-  Eigen::VectorXd ads = rlfd::UnbiasedMultipleAutocorrelation(ts, embedding_dimension); 
+  Eigen::VectorXd ads = rlfd::delay::UnbiasedMultipleAutocorrelation(ts, embedding_dimension); 
 
   std::cout << ads << std::endl;
   rlfd::utils::Gnuplot gnuplot;

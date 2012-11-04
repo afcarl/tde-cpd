@@ -28,6 +28,8 @@
 #include <numeric>
 
 namespace rlfd {
+namespace segment {
+
 /**
  * A class to perform time series segmentation.
  * It takes as a argument a Model type
@@ -111,6 +113,7 @@ class DHMMSegmenter
   }
 };
 
+} // namespace segmentation
 } // namespace rlfd
 
 #endif

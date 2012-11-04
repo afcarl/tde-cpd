@@ -23,11 +23,13 @@
 #include <rlfd/Model.hh>
 
 namespace rlfd {
+namespace delay {
 
 class DelayEmbedding : Model {
  public:
   double distance(const Model& other) const override { return 0; };
 };
 
+} // namespace delay
 } // namespace rlfd
 #endif
