@@ -29,6 +29,7 @@ int main(int argc, char** argv)
   if (argc != 3) {
     std::cerr << "Usage: " << argv[0] << " [FILE] [Embedding dimension] [OPTION]" << std::endl;
     std::cerr << "  -p --plot    Plot S_m^2 as a function of tau" << std::endl;
+    return -1;
   }
   char* filename = argv[1];
   int embedding_dimension = std::stoi(argv[2]);
