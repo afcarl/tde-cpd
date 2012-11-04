@@ -17,8 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#ifndef __DHMMSEGMENTER_H__
-#define __DHMMSEGMENTER_H__
+#ifndef __KOHLMORGEN_LEMM_HH__
+#define __KOHLMORGEN_LEMM_HH__
 
 #include <rlfd/Model.hh>
 
@@ -42,11 +42,11 @@ namespace segment {
  * Columbia, Canada: MIT Press.
  */
 template <class WindowModel>
-class DHMMSegmenter
+class KohlmorgenLemm
 {
  public:
-  DHMMSegmenter(unsigned W=50, double varsigma=0, double k=0);
-  virtual ~DHMMSegmenter() {};
+  KohlmorgenLemm(unsigned W=50, double varsigma=0, double k=0);
+  virtual ~KohlmorgenLemm() {};
 
  private:
   struct State {

@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#include <rlfd/segment/DHMMSegmenter.hh>
+#include <rlfd/segment/KohlmorgenLemm.hh>
 #include <rlfd/delay/DelayEmbedding.hh>
 #include <rlfd/delay/GammaTest.hh>
 #include <rlfd/utils/Gnuplot.hh>
@@ -27,7 +27,7 @@
 
 int main(void)
 {
-  rlfd::segment::DHMMSegmenter<rlfd::delay::DelayEmbedding> segmenter();
+  rlfd::segment::KohlmorgenLemm<rlfd::delay::DelayEmbedding> segmenter();
   // Synthetic example 
   // Generate 500 uniformly distributed points x in the range 
   // [0, 2pi] and add uniformly distributed
