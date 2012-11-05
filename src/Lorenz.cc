@@ -43,8 +43,8 @@ void write_lorenz( const state_type &x , const double t )
 
 int main(int argc, char **argv)
 {
-  if (argc != 2) {
-    std::cout << "Usage: " << argv[0] << " [Delta t]" << std::endl << std::endl;
+  if (argc != 3) {
+    std::cout << "Usage: " << argv[0] << " [Delta t] [Number of points]" << std::endl << std::endl;
     std::cout << "Generate points from the Lorenz attractor." << std::endl;
     std::cout << "Lorenz, Edward N., 1963: Deterministic Nonperiodic Flow. J. Atmos. Sci., 20, 130–141." << std::endl;
     std::cout << "doi: http://dx.doi.org/10.1175/1520-0469(1963)020<0130:DNF>2.0.CO;2" << std::endl;
@@ -52,9 +52,10 @@ int main(int argc, char **argv)
     return -1;
   }
   double dt = std::stod(argv[1]);
-  state_type x = { 10.0 , 1.0 , 1.0 }; // initial conditions
+  int npoints = std::stoi(argv[2])-1;
+  state_type x0 = { 1.0/10.0 , -1.0/5.0 , 3.0/10.0 }; // initial conditions
   runge_kutta4< state_type > stepper;
-  integrate_const(stepper, lorenz, x, 0.0, 25.0, dt, write_lorenz);
+  integrate_n_steps(stepper, lorenz, x0, /*t0*/ 0.0, dt, npoints, write_lorenz);
   return 0;
 }
 
