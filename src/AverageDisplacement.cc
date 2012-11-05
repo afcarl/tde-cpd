@@ -17,8 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#include <rlfd/utils/Matio.hh>
 #include <rlfd/utils/Gnuplot.hh>
+#include <rlfd/utils/ImportExport.hh>
 #include <rlfd/delay/UnbiasedMultipleAutocorrelation.hh>
 
 #include <string>
@@ -34,14 +34,9 @@ int main(int argc, char** argv)
   char* filename = argv[1];
   int embedding_dimension = std::stoi(argv[2]);
 
-  // Open up the .mat file. Version 7, and 7.3 are not supported and result in a
-  // segmentation fault with the current version of libmatio in Ubuntu. 
-  rlfd::utils::Matio matio;
-  matio.Open(filename);
-  
+  // Import the matrix
   Eigen::MatrixXd ts;
-  matio.Read("y", ts);
-  matio.Close();
+  rlfd::utils::Import(filename, ts); 
 
   // Compute the S_m^2 statistics for a range of tau values
   Eigen::VectorXd ads = rlfd::delay::UnbiasedMultipleAutocorrelation(ts, embedding_dimension); 
