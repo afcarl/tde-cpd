@@ -36,3 +36,6 @@ ADD_EXECUTABLE(autocorrelation src/Autocorrelation.cc)
 TARGET_LINK_LIBRARIES(autocorrelation ${FFTW_LIBRARIES} "-lmatio -lz")
 
 ADD_EXECUTABLE(lorenz src/Lorenz.cc)
+
+ADD_EXECUTABLE(catmat src/CatMat.cc)
+TARGET_LINK_LIBRARIES(catmat "-lmatio -lz")

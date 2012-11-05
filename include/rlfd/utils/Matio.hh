@@ -20,14 +20,13 @@
 #ifndef __MATIO_HH__
 #define __MATIO_HH__
 
-#include <stdexcept>
-#include <Eigen/Core>
+#include <rlfd/utils/Matrixio.hh>
 #include <matio.h>
 
 namespace rlfd {
 namespace utils {
 
-class Matio
+class Matio : public Matrixio
 {
  public:
   Matio() : fp_(NULL) {};
@@ -39,6 +38,12 @@ class Matio
     if (fp_ == NULL) {
       throw std::runtime_error("Failed to open mat file");
     }
+  }
+
+  void Read(Eigen::MatrixXd& out) throw(std::runtime_error)
+  {
+    // @FIXME Just read the first variable instead of "y"
+    Read(std::string("y"), out);
   }
 
   void Read(const std::string& name, Eigen::MatrixXd& out) throw(std::runtime_error)
@@ -53,7 +58,7 @@ class Matio
     Mat_VarFree(matvar);
   } 
 
-  void Close(void)
+  void Close(void) throw(std::runtime_error)
   {
     Mat_Close(fp_);
   }
