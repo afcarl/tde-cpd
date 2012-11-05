@@ -17,8 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#ifndef __SQUARED_AVERAGE_DISTANCE_HH__
-#define __SQUARED_AVERAGE_DISTANCE_HH__
+#ifndef __SQUARED_AVERAGE_DISPLACEMENT_HH__
+#define __SQUARED_AVERAGE_DISPLACEMENT_HH__
 
 #include <Eigen/Core>
 #include <rlfd/utils/Autocorrelation.hh>
@@ -47,7 +47,7 @@ namespace delay {
  *
  * @FIXME check for boundary issues.
  */
-Eigen::VectorXd SquaredAverageDistance(const Eigen::VectorXd& ts, int m, int nlags=20)
+Eigen::VectorXd SquaredAverageDisplacement(const Eigen::VectorXd& ts, int m, int nlags=20)
 {
   nlags = std::min(nlags, ts.size()-(m-1));
 

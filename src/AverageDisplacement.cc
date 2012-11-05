@@ -19,7 +19,7 @@
  */
 #include <rlfd/utils/Gnuplot.hh>
 #include <rlfd/utils/ImportExport.hh>
-#include <rlfd/delay/SquaredAverageDistance.hh>
+#include <rlfd/delay/SquaredAverageDisplacement.hh>
 
 #include <string>
 #include <iostream>
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
   rlfd::utils::Import(filename, ts); 
 
   // Compute the S_m^2 statistics for a range of tau values
-  Eigen::VectorXd ads = rlfd::delay::SquaredAverageDistance(ts.col(1), embedding_dimension); 
+  Eigen::VectorXd ads = rlfd::delay::SquaredAverageDisplacement(ts.col(1), embedding_dimension); 
 
   // Scale the statistics on 0 to 1 range
   double maxCoeff = ads.maxCoeff();
