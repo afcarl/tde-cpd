@@ -19,7 +19,7 @@
  */
 #include <rlfd/utils/Gnuplot.hh>
 #include <rlfd/utils/ImportExport.hh>
-#include <rlfd/delay/UnbiasedMultipleAutocorrelation.hh>
+#include <rlfd/delay/SquaredAverageDistance.hh>
 
 #include <string>
 #include <iostream>
@@ -39,9 +39,23 @@ int main(int argc, char** argv)
   rlfd::utils::Import(filename, ts); 
 
   // Compute the S_m^2 statistics for a range of tau values
-  Eigen::VectorXd ads = rlfd::delay::UnbiasedMultipleAutocorrelation(ts, embedding_dimension); 
+  Eigen::VectorXd ads = rlfd::delay::SquaredAverageDistance(ts.col(1), embedding_dimension); 
 
-  std::cout << ads << std::endl;
+  // Scale the statistics on 0 to 1 range
+  double maxCoeff = ads.maxCoeff();
+  double minCoeff = ads.minCoeff();
+  ads.array() = (ads.array() - minCoeff).array()/(maxCoeff - minCoeff); 
+
+  //std::cout << ads << std::endl;
+  double threshold = 1.0/std::exp(1.0);
+  for (int i = 0; i < ads.size(); i++) {
+    if (ads[i] > threshold) {
+        std::cout << "Point at " << i << std::endl;
+        std::cout << "tau = " << i*0.01 << std::endl;
+        break;
+    }
+  }
+
   rlfd::utils::Gnuplot gnuplot;
   gnuplot(ads);
 

@@ -17,8 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#ifndef __UNBIASED_MULTIPLE_AUTOCORRELATION_HH__
-#define __UNBIASED_MULTIPLE_AUTOCORRELATION_HH__
+#ifndef __SQUARED_AVERAGE_DISTANCE_HH__
+#define __SQUARED_AVERAGE_DISTANCE_HH__
 
 #include <Eigen/Core>
 #include <rlfd/utils/Autocorrelation.hh>
@@ -47,7 +47,7 @@ namespace delay {
  *
  * @FIXME check for boundary issues.
  */
-Eigen::VectorXd UnbiasedMultipleAutocorrelation(const Eigen::VectorXd& ts, int m, int nlags=20)
+Eigen::VectorXd SquaredAverageDistance(const Eigen::VectorXd& ts, int m, int nlags=20)
 {
   nlags = std::min(nlags, ts.size()-(m-1));
 
@@ -67,7 +67,7 @@ Eigen::VectorXd UnbiasedMultipleAutocorrelation(const Eigen::VectorXd& ts, int m
 
   for (int k = 0; k < nlags; k++) {
     // Compute the sum of the autocorrelations for m-1 lags
-    double Rxxm = ts.segment(k, m-1).sum();
+    double Rxxm = acf.segment(k, m-1).sum();
     ad[k] = 2.0*((double) (m-1))*E - 2.0*Rxxm;
   }
 
