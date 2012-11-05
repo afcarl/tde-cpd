@@ -34,6 +34,8 @@ namespace utils {
 class Gnuplot 
 {
  public:
+  const char* STYLE="linespoints";
+
   Gnuplot()
   {
     gp_ = popen("gnuplot -persist","w"); 
@@ -48,30 +50,39 @@ class Gnuplot
     fclose(gp_);
   }
 
-  void operator()(const Eigen::VectorXd& dep)
+  void operator()(const Eigen::VectorXd& y)
   {
-    fprintf(gp_, "plot '-' with linespoints\n");
-    for (int i = 0; i < dep.size(); i++) {
-      fprintf(gp_, "%.15le\n", dep[i]); 
+    fprintf(gp_, "plot '-' with %s\n", STYLE);
+    for (int i = 0; i < y.size(); i++) {
+      fprintf(gp_, "%.15le\n", y[i]); 
       fflush(gp_);
     }
     fprintf(gp_, "\ne\n");
   }
 
-  void operator()(const Eigen::VectorXd& ind, const Eigen::VectorXd& dep)
+  void operator()(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
   {
-    // TODO Check if dim is the same
-    fprintf(gp_, "plot '-' with linespoints\n");
-    for (int i = 0; i < ind.size(); i++) {
-      fprintf(gp_, "%.15le %.15le\n", ind[i], dep[i]); 
+    fprintf(gp_, "plot '-' with %s\n", STYLE);
+    for (int i = 0; i < x.size(); i++) {
+      fprintf(gp_, "%.15le %.15le\n", x[i], y[i]);
       fflush(gp_);
     }
     fprintf(gp_, "\ne\n");
   }
 
-  void operator()(const std::vector<double>& ind, const std::vector<double>& dep)
+  void operator()(const std::vector<double>& x, const std::vector<double>& y)
   {
-    this->operator()(Eigen::VectorXd::Map(&ind[0], ind.size()), Eigen::VectorXd::Map(&dep[0], dep.size()));
+    this->operator()(Eigen::VectorXd::Map(&x[0], x.size()), Eigen::VectorXd::Map(&y[0], y.size()));
+  }
+
+  void operator()(const Eigen::VectorXd& x, const Eigen::VectorXd& y, const Eigen::VectorXd& z)
+  {
+    fprintf(gp_, "splot '-' with %s\n", STYLE);
+    for (int i = 0; i < x.size(); i++) {
+      fprintf(gp_, "%.15le %.15le %.15le\n", x[i], y[i], z[i]); 
+      fflush(gp_);
+    }
+    fprintf(gp_, "\ne\n");
   }
 
  private:
