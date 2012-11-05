@@ -22,12 +22,12 @@ include_directories(${FFTW_INCLUDES})
 find_package(Boost REQUIRED)
 include_directories(${BOOST_INCLUDE_DIR})
 
-include_directories(${CMAKE_SOURCE_DIR}/external/odeint)
-
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-ADD_EXECUTABLE(ts-segment src/TimeSeriesSegmentation.cc)
-TARGET_LINK_LIBRARIES(ts-segment ${FLANN_LIBS} ${FFTW_LIBRARIES} ${BOOST_LIBRARIES})
+include_directories(${CMAKE_SOURCE_DIR}/external/odeint)
+
+ADD_EXECUTABLE(kohlmorgen-lemm src/KohlmorgenLemm.cc)
+TARGET_LINK_LIBRARIES(kohlmorgen-lemm ${FLANN_LIBS} ${FFTW_LIBRARIES})
 
 ADD_EXECUTABLE(average-displacement src/AverageDisplacement.cc)
 TARGET_LINK_LIBRARIES(average-displacement ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
