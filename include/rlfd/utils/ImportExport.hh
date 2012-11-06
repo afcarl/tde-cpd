@@ -30,6 +30,13 @@
 namespace rlfd {
 namespace utils {
 
+// Read from stdin
+void Import(Eigen::MatrixXd& out)
+{
+  rlfd::utils::Tabulario mat;
+  mat.Read(out);
+}
+
 void Import(const std::string& filename, Eigen::MatrixXd& out) 
 {
   // @TODO Rely on extensions, for now

@@ -41,7 +41,7 @@ class Tabulario : public Matrixio
   virtual ~Tabulario() {};
 
  private:
-  std::ifstream file;
+  std::ifstream* file = nullptr;
 
   void split_line(const std::string& line, std::vector<std::string>& words)
   {
@@ -69,16 +69,21 @@ class Tabulario : public Matrixio
   };
 
  public:
+  void Open() throw(std::runtime_error)
+  {
+    /* Do nothing, std::cin is always open */
+  }
+
   void Open(const std::string& filename) throw(std::runtime_error)
   { 
-    file.open(filename, std::ifstream::in);
+    file = new std::ifstream(filename, std::ifstream::in);
   }
 
   void Read(Eigen::MatrixXd& out) throw(std::runtime_error)
   {
     // Read all lines
     std::vector<std::string> lines;
-    std::copy(std::istream_iterator<Line>(file), 
+    std::copy(std::istream_iterator<Line>(file ? *file: std::cin), 
               std::istream_iterator<Line>(),
               std::back_inserter(lines));
 
@@ -103,7 +108,9 @@ class Tabulario : public Matrixio
 
   void Close(void) throw(std::runtime_error)
   {
-    file.close();
+    if (file) {
+      file->close();
+    }
   }
 };
 
