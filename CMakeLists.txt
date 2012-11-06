@@ -30,12 +30,12 @@ ADD_EXECUTABLE(kohlmorgen-lemm src/KohlmorgenLemm.cc)
 TARGET_LINK_LIBRARIES(kohlmorgen-lemm ${FLANN_LIBS} ${FFTW_LIBRARIES})
 
 ADD_EXECUTABLE(average-displacement src/AverageDisplacement.cc)
-TARGET_LINK_LIBRARIES(average-displacement ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
+TARGET_LINK_LIBRARIES(average-displacement ${FFTW_LIBRARIES} "-lmatio -lz")
 
 ADD_EXECUTABLE(autocorrelation src/Autocorrelation.cc)
 TARGET_LINK_LIBRARIES(autocorrelation ${FFTW_LIBRARIES} "-lmatio -lz")
 
 ADD_EXECUTABLE(lorenz src/Lorenz.cc)
 
-ADD_EXECUTABLE(catmat src/CatMat.cc)
-TARGET_LINK_LIBRARIES(catmat "-lmatio -lz")
+ADD_EXECUTABLE(mattodat src/MatToDat.cc)
+TARGET_LINK_LIBRARIES(mattodat "-lmatio -lz")
