@@ -17,29 +17,34 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#include <rlfd/utils/Matio.hh>
-#include <rlfd/utils/Gnuplot.hh>
+#include <rlfd/utils/ImportExport.hh>
 #include <rlfd/utils/Autocorrelation.hh>
 
+#include <Eigen/Core>
 #include <iostream>
 
 int main(int argc, char** argv)
 {
+  if (argc > 2) {
+    std::cerr << "Compute the sample autocorrelation function" << std::endl; 
+    std::cerr << "Usage: autocorrelation [FILE]" << std::endl;
+    return -1;
+  }
+
   // Open up the .mat file. Version 7, and 7.3 are not supported and result in a
   // segmentation fault with the current version of libmatio in Ubuntu. 
-  rlfd::utils::Matio matio;
-  matio.Open(argv[1]);
-  
   Eigen::MatrixXd ts;
-  matio.Read("y", ts);
-  matio.Close();
+  if (argc == 2) {
+    rlfd::utils::Import(argv[2], ts);
+  } else {
+    rlfd::utils::Import(ts);
+  }
 
   // Compute the autocorrelation coefficients 
   Eigen::VectorXd acoeffs;
   rlfd::utils::Autocorrelation(ts, acoeffs); 
 
-  std::cout << "ACF" << std::endl << acoeffs << std::endl;
-
+  std::cout << acoeffs << std::endl;
 
   return 0;
 }
