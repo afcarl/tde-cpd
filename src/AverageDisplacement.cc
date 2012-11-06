@@ -19,45 +19,111 @@
  */
 #include <rlfd/utils/Gnuplot.hh>
 #include <rlfd/utils/ImportExport.hh>
+#include <rlfd/delay/AverageDisplacement.hh>
 #include <rlfd/delay/SquaredAverageDisplacement.hh>
 
 #include <string>
 #include <iostream>
 
+#include <getopt.h>
+
+void print_usage(void)
+{
+  std::cerr << "Usage: " << "average-displacement" << "[OPTION] [Embedding Dimension] [FILE]" << std::endl;
+  std::cerr << "  -n --nlags        The number of lags to compute." << std::endl;
+  std::cerr << "  -p --plot         Plot S_m^2 as a function of tau" << std::endl;
+  std::cerr << "  -r --rate         Sampling rate" << std::endl;
+  std::cerr << "  -s --squared      Compute the average squared using the sample autocorrelation function" << std::endl;
+}
+
 int main(int argc, char** argv)
 {
-  if (argc != 3) {
-    std::cerr << "Usage: " << argv[0] << " [FILE] [Embedding dimension] [OPTION]" << std::endl;
-    std::cerr << "  -p --plot    Plot S_m^2 as a function of tau" << std::endl;
-    return -1;
+  // Default values
+  int lag = 20;
+  bool plot = false;
+  double rate = 0.0;
+  bool squared = false;
+
+  // Parse arguments
+  static struct option long_options[] =
+  {
+    {"nlags", required_argument, 0, 'n'},
+    {"plot", no_argument, 0, 'p'},
+    {"rate", required_argument, 0, 'r'},
+    {"squared", no_argument, 0, 's'},
+    {0, 0, 0, 0}
+  };
+
+  int option_index = 0;
+  int c;
+  while ((c = getopt_long(argc, argv, "n:pr:s", long_options, &option_index)) != -1)
+  {
+    switch (c)
+    {
+      case 'n' :
+        lag = std::stoi(optarg);
+        break;
+      case 'p':
+        plot = true;
+        break;
+      case 'r':
+        rate = std::stod(optarg);
+        break;
+      case 's':
+        squared = true;
+        break;
+      default:
+        print_usage();
+        return -1;
+    }
   }
-  char* filename = argv[1];
-  int embedding_dimension = std::stoi(argv[2]);
+
+  if (!(optind + 2 <= argc)) {
+     print_usage();
+     return -1;
+  }
+
+  int embedding_dimension = std::stoi(argv[optind++]);
+  std::string filename = argv[optind];
 
   // Import the matrix
   Eigen::MatrixXd ts;
   rlfd::utils::Import(filename, ts); 
 
-  // Compute the S_m^2 statistics for a range of tau values
-  Eigen::VectorXd ads = rlfd::delay::SquaredAverageDisplacement(ts.col(1), embedding_dimension); 
+  // Compute the statistics for a range of tau values
+  Eigen::VectorXd ads;
+  if (squared) {
+    std::cout << "# Squared average displacement statistics" << std::endl;
+    ads = rlfd::delay::SquaredAverageDisplacement(ts.col(1), embedding_dimension, lag);
+  } else {
+    std::cout << "# Average displacement statistics" << std::endl;
+    ads = rlfd::delay::AverageDisplacement(ts.col(1), embedding_dimension, lag);
+  }
+
+  if (plot) {
+    rlfd::utils::Gnuplot gnuplot;
+    gnuplot(ads);
+  }
 
   // Scale the statistics on 0 to 1 range
   double maxCoeff = ads.maxCoeff();
   double minCoeff = ads.minCoeff();
   ads.array() = (ads.array() - minCoeff).array()/(maxCoeff - minCoeff); 
 
-  //std::cout << ads << std::endl;
   double threshold = 1.0/std::exp(1.0);
   for (int i = 0; i < ads.size(); i++) {
     if (ads[i] > threshold) {
-        std::cout << "Point at " << i << std::endl;
-        std::cout << "tau = " << i*0.01 << std::endl;
-        break;
+      std::cout << "tau = ";
+      if (rate) {
+        std::cout << i*rate << " sec" << std::endl;
+      } else {
+        std::cout << i << " t/s" << std::endl;
+      }
+      break;
     }
   }
 
-  rlfd::utils::Gnuplot gnuplot;
-  gnuplot(ads);
+  //std::cout << ads << std::endl;
 
   return 0;
 }
