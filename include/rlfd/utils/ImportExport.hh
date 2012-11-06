@@ -42,7 +42,7 @@ void Import(const std::string& filename, Eigen::MatrixXd& out)
   } else if (extension == "dat") {
     mat = new rlfd::utils::Tabulario();
   } else {
-    throw std::runtime_error("Unssupported file type");
+    throw std::runtime_error(std::string("Unsupported file type ") + extension);
   }
 
   mat->Open(filename);
