@@ -17,7 +17,6 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#include <rlfd/utils/Gnuplot.hh>
 #include <rlfd/utils/ImportExport.hh>
 #include <rlfd/delay/AverageDisplacement.hh>
 #include <rlfd/delay/SquaredAverageDisplacement.hh>
@@ -32,8 +31,6 @@ void print_usage(void)
   std::cerr << "Usage: " << "average-displacement" << "[OPTION] [Embedding Dimension] [FILE]" << std::endl;
   std::cerr << "  -m --dimension    Embedding dimension" << std::endl;
   std::cerr << "  -n --nlags        Number of lags to compute." << std::endl;
-  std::cerr << "  -p --plot         Plot S_m^2 as a function of tau" << std::endl;
-  //std::cerr << "  -r --rate         Sampling rate" << std::endl;
   std::cerr << "  -s --squared      Compute the average squared using the sample autocorrelation function" << std::endl;
 }
 
@@ -42,7 +39,6 @@ int main(int argc, char** argv)
   // Default values
   int embedding_dimension = 2;
   int lag = 20;
-  bool plot = false;
   bool squared = false;
 
   // Parse arguments
@@ -50,15 +46,13 @@ int main(int argc, char** argv)
   {
     {"dimension", required_argument, 0, 'm'},
     {"nlags", required_argument, 0, 'n'},
-    {"plot", no_argument, 0, 'p'},
-  //{"rate", required_argument, 0, 'r'},
     {"squared", no_argument, 0, 's'},
     {0, 0, 0, 0}
   };
 
   int option_index = 0;
   int c;
-  while ((c = getopt_long(argc, argv, "m:n:ps", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "m:n:s", long_options, &option_index)) != -1)
   {
     switch (c)
     {
@@ -67,9 +61,6 @@ int main(int argc, char** argv)
         break;
       case 'n' :
         lag = std::stoi(optarg);
-        break;
-      case 'p':
-        plot = true;
         break;
       case 's':
         squared = true;
@@ -103,12 +94,6 @@ int main(int argc, char** argv)
   double maxCoeff = ads.maxCoeff();
   double minCoeff = ads.minCoeff();
   ads.array() = (ads.array() - minCoeff).array()/(maxCoeff - minCoeff); 
-
-  // Plot 
-  if (plot) {
-    rlfd::utils::Gnuplot gnuplot;
-    gnuplot(ads);
-  }
 
   // Print the sm statistics
   std::cout << ads << std::endl;
