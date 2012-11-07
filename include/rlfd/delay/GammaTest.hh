@@ -26,69 +26,52 @@
 namespace rlfd {
 namespace delay {
 
-class GammaTest
+/**
+ * Compute the Gamma Test on the set of points
+ * @param in The input x time series. 
+ * @param out The output y time series. 
+ * @return A vector where the second component is the gamma statistic while the first
+ * is the slope of the regression line for the pairs coordinates (gamma, delta) and is a 
+ * a good indicator of the complexity	of the surface defined by f. 
+ */
+Eigen::VectorXd GammaTest(const Eigen::MatrixXd& in, const Eigen::VectorXd& out, int nn) 
 {
- public:
-  /**
-   * @param nn The number of nearest neighbors to consider.  
-   */
-  GammaTest(unsigned nn=20) : nn_(nn) {};
-  virtual ~GammaTest() {};
+  // Type conversions. No memory duplication. 
+  // @fixme seems to be no way to avoid const_cast unless the data is duplicated 
+  flann::Matrix<double> input(const_cast<double*>(in.data()), in.rows(), in.cols());
+  flann::Index<flann::L2<double> > index(input, flann::KDTreeSingleIndexParams());
+  index.buildIndex();
 
-  /**
-   * Compute the Gamma Test on the set of points
-   * @param points Series of points as rows of a matrix 
-   * @return A vector where the second component is the gamma statistic while the first
-   * is the slope of the regression line for the pairs coordinates (gamma, delta) and is a 
-   * a good indicator of the complexity	of the surface defined by f. 
-   */
-  Eigen::VectorXd operator()(const Eigen::MatrixXd& in, const Eigen::VectorXd& out) 
-  {
-    // Type conversions. No memory duplication. 
-    // @fixme seems to be no way to avoid const_cast or data duplication
-    flann::Matrix<double> input(const_cast<double*>(in.data()), in.rows(), in.cols());
-    flann::Index<flann::L2<double> > index(input, flann::KDTreeSingleIndexParams());
-    index.buildIndex();
+  // Compute the k-nearest neighbors for every input points
+  flann::Matrix<int> indices(new int[input.rows*(nn+1)], input.rows, (nn+1));
+  flann::Matrix<double> dists(new double[input.rows*(nn+1)], input.rows, (nn+1));
+  index.knnSearch(input, indices, dists, (nn+1), flann::SearchParams(128));
 
-    // Compute the k-nearest neighbors for every input points
-    flann::Matrix<int> indices(new int[input.rows*(nn_+1)], input.rows, (nn_+1));
-    flann::Matrix<double> dists(new double[input.rows*(nn_+1)], input.rows, (nn_+1));
-    index.knnSearch(input, indices, dists, (nn_+1), flann::SearchParams(128));
-
-    // Compute delta and gamma for a range of k
-    Eigen::MatrixXd deltas(nn_, 2);
-    Eigen::VectorXd gammas(nn_);
-    for (unsigned p = 1; p < (nn_+1); p++) {
-      double average_input_dist = 0.0;
-      double average_output_dist = 0.0;
-      for (int i = 0; i < in.rows(); i++) {
-        average_input_dist += dists[i][p];
-        // note y_{N[i, k]} is not necessarily the kth 
-        // nearest neighbour of yi in output space
-        int kthnn = indices[i][p];
-        average_output_dist += std::pow(out[kthnn] - out[i], 2);
-      }
-      average_input_dist = average_input_dist/((double) in.rows());
-      average_output_dist = average_output_dist/(2.0*in.rows());
-
-      deltas(p-1, 0) = average_input_dist;
-      deltas(p-1, 1) = 1;
-      gammas[p-1] = average_output_dist;
+  // Compute delta and gamma for a range of k
+  Eigen::MatrixXd deltas(nn, 2);
+  Eigen::VectorXd gammas(nn);
+  for (int p = 1; p < (nn+1); p++) {
+    double average_input_dist = 0.0;
+    double average_output_dist = 0.0;
+    for (int i = 0; i < in.rows(); i++) {
+      average_input_dist += dists[i][p];
+      // note y_{N[i, k]} is not necessarily the kth 
+      // nearest neighbour of yi in output space
+      int kthnn = indices[i][p];
+      average_output_dist += std::pow(out[kthnn] - out[i], 2);
     }
-    // Compute the least square fit to the pairs deltas, gammas and find intercept. 
-    // The intercept of the regression line converges 
-    // in probability to var(r) as M goes to infinity.
-    return deltas.colPivHouseholderQr().solve(gammas);
-  }
+    average_input_dist = average_input_dist/((double) in.rows());
+    average_output_dist = average_output_dist/(2.0*in.rows());
 
-  inline Eigen::VectorXd operator()(const std::vector<double>& in, const std::vector<double>& out)
-  {
-    return this->operator()(Eigen::VectorXd::Map(&in[0], in.size()), Eigen::VectorXd::Map(&out[0], out.size()));
+    deltas(p-1, 0) = average_input_dist;
+    deltas(p-1, 1) = 1;
+    gammas[p-1] = average_output_dist;
   }
-
- private:
-  unsigned nn_;
-};
+  // Compute the least square fit to the pairs deltas, gammas and find intercept. 
+  // The intercept of the regression line converges 
+  // in probability to var(r) as M goes to infinity.
+  return deltas.colPivHouseholderQr().solve(gammas);
+}
 
 } // namespace delay
 } // namespace rlfd
