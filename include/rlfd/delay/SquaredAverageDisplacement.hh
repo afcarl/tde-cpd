@@ -47,7 +47,7 @@ namespace delay {
  *
  * @FIXME check for boundary issues.
  */
-Eigen::VectorXd SquaredAverageDisplacement(const Eigen::VectorXd& ts, int m, int nlags=20)
+Eigen::VectorXd SquaredAverageDisplacement(const Eigen::VectorXd& ts, int m, int nlags)
 {
   nlags = std::min(nlags, ts.size()-(m-1));
 
@@ -66,9 +66,11 @@ Eigen::VectorXd SquaredAverageDisplacement(const Eigen::VectorXd& ts, int m, int
   double E = (1.0/ts.size())*ts.squaredNorm();
 
   for (int k = 0; k < nlags; k++) {
-    // Compute the sum of the autocorrelations for m-1 lags
-    double Rxxm = acf.segment(k, m-1).sum();
-    ad[k] = 2.0*((double) (m-1))*E - 2.0*Rxxm;
+    double sum_rxx = 0.0;
+    for (int j = 1; j <= (m-1); j++) {
+      sum_rxx += acf[j*k]; 
+    }
+    ad[k] = 2.0*(m-1)*E - 2.0*sum_rxx;
   }
 
   return ad;
