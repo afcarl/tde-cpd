@@ -29,13 +29,19 @@ include_directories(${CMAKE_SOURCE_DIR}/external/odeint)
 ADD_EXECUTABLE(kohlmorgen-lemm src/KohlmorgenLemm.cc)
 TARGET_LINK_LIBRARIES(kohlmorgen-lemm ${FLANN_LIBS} ${FFTW_LIBRARIES})
 
-ADD_EXECUTABLE(average-displacement src/AverageDisplacement.cc)
-TARGET_LINK_LIBRARIES(average-displacement ${FFTW_LIBRARIES} "-lmatio -lz")
-
 ADD_EXECUTABLE(autocorrelation src/Autocorrelation.cc)
 TARGET_LINK_LIBRARIES(autocorrelation ${FFTW_LIBRARIES} "-lmatio -lz")
 
-ADD_EXECUTABLE(lorenz src/Lorenz.cc)
+ADD_EXECUTABLE(average-displacement src/AverageDisplacement.cc)
+TARGET_LINK_LIBRARIES(average-displacement ${FFTW_LIBRARIES} "-lmatio -lz")
+
+ADD_EXECUTABLE(gamma-test src/GammaTest.cc)
+TARGET_LINK_LIBRARIES(gamma-test ${FFTW_LIBRARIES} ${FLANN_LIBS} "-lmatio -lz")
+
+ADD_EXECUTABLE(delay-embedding src/DelayEmbedding.cc)
+TARGET_LINK_LIBRARIES(delay-embedding "-lmatio -lz")
 
 ADD_EXECUTABLE(mattodat src/MatToDat.cc)
 TARGET_LINK_LIBRARIES(mattodat "-lmatio -lz")
+
+ADD_EXECUTABLE(lorenz src/Lorenz.cc)
