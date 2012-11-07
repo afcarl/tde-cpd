@@ -17,6 +17,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
+#include <limits>
 #include <iostream>
 #include <boost/array.hpp>
 #include <boost/numeric/odeint.hpp>
@@ -43,6 +44,7 @@ void write_lorenz( const state_type &x , const double t )
 
 int main(int argc, char **argv)
 {
+  std::cout.precision(std::numeric_limits<double>::digits10);
   if (argc != 3) {
     std::cout << "Usage: " << argv[0] << " [Delta t] [Number of points]" << std::endl << std::endl;
     std::cout << "Generate points from the Lorenz attractor." << std::endl;

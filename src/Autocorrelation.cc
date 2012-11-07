@@ -22,6 +22,7 @@
 
 #include <Eigen/Core>
 #include <iostream>
+#include <limits>
 
 int main(int argc, char** argv)
 {
@@ -44,6 +45,7 @@ int main(int argc, char** argv)
   Eigen::VectorXd acoeffs;
   rlfd::utils::Autocorrelation(ts, acoeffs); 
 
+  std::cout.precision(std::numeric_limits<double>::digits10);
   std::cout << acoeffs << std::endl;
 
   return 0;

@@ -20,6 +20,7 @@
 #include <rlfd/utils/Matio.hh>
 #include <Eigen/Core>
 #include <iostream>
+#include <limits>
 
 int main(int argc, char** argv)
 {
@@ -35,6 +36,7 @@ int main(int argc, char** argv)
   mat.Read(out);
   mat.Close();
 
+  std::cout.precision(std::numeric_limits<double>::digits10);
   std::cout << out << std::endl;
 
   return 0;

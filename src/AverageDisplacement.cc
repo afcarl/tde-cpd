@@ -22,6 +22,7 @@
 #include <rlfd/delay/SquaredAverageDisplacement.hh>
 
 #include <string>
+#include <limits>
 #include <iostream>
 
 #include <getopt.h>
@@ -96,6 +97,7 @@ int main(int argc, char** argv)
   ads.array() = (ads.array() - minCoeff).array()/(maxCoeff - minCoeff); 
 
   // Print the sm statistics
+  std::cout.precision(std::numeric_limits<double>::digits10);
   std::cout << ads << std::endl;
 
   return 0;
