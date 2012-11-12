@@ -1,6 +1,6 @@
 /**
  * Skills segmentation and learning for Robot Learning by Demonstration
- * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca> 
+ * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -38,7 +38,14 @@ Eigen::VectorXd GammaTest(const Eigen::MatrixXd& in, const Eigen::VectorXd& out,
 {
   // Type conversions. No memory duplication. 
   // @fixme seems to be no way to avoid const_cast unless the data is duplicated 
-  flann::Matrix<double> input(const_cast<double*>(in.data()), in.rows(), in.cols());
+  //flann::Matrix<double> input(const_cast<double*>(in.data()), in.rows(), in.cols());
+  flann::Matrix<double> input(new double[in.rows()*in.cols()], in.rows(), in.cols());
+  for (int i = 0; i  < in.rows(); i++) {
+    for (int j = 0; j < in.cols(); j++) {
+      input[i][j] = in(i, j);
+    }
+  }
+
   flann::Index<flann::L2<double> > index(input, flann::KDTreeSingleIndexParams());
   index.buildIndex();
 
@@ -55,8 +62,6 @@ Eigen::VectorXd GammaTest(const Eigen::MatrixXd& in, const Eigen::VectorXd& out,
     double average_output_dist = 0.0;
     for (int i = 0; i < in.rows(); i++) {
       average_input_dist += dists[i][p];
-      // note y_{N[i, k]} is not necessarily the kth 
-      // nearest neighbour of yi in output space
       int kthnn = indices[i][p];
       average_output_dist += std::pow(out[kthnn] - out[i], 2);
     }
@@ -67,6 +72,11 @@ Eigen::VectorXd GammaTest(const Eigen::MatrixXd& in, const Eigen::VectorXd& out,
     deltas(p-1, 1) = 1;
     gammas[p-1] = average_output_dist;
   }
+
+  delete[] input.ptr();
+  delete[] indices.ptr();
+  delete[] dists.ptr();
+                
   // Compute the least square fit to the pairs deltas, gammas and find intercept. 
   // The intercept of the regression line converges 
   // in probability to var(r) as M goes to infinity.
