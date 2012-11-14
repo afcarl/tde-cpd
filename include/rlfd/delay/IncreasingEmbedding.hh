@@ -39,27 +39,23 @@ namespace delay {
  */
 Eigen::VectorXd IncreasingEmbedding(const Eigen::VectorXd& ts, int lag, int max_dimension, int nn=20)
 {
-  // FIXME Assumes that max_dimension is > 2
-  Eigen::VectorXd gamma_dimension(max_dimension - 1);
+  Eigen::VectorXd gamma_dimension(max_dimension);
 
-  for (int m = 2; m <= max_dimension; m++) {
+  for (int m = 1; m <= max_dimension; m++) {
     // Input time series for the gamma test is the m-dimension embedding
     Eigen::MatrixXd ts_embedded;
     rlfd::delay::DelayEmbedding::Embed(ts, m, lag, ts_embedded);
 
     // Output is defined as the next point after the last component of the
     // previous embedding vector.
-    int M = ts.size() - ((m-1)*lag + 1);
+    int M = ts.size() - m*lag;
     Eigen::VectorXd next_points(M);
     for (int i = 0; i < M; i++) {
-      next_points[i] = ts[i + (m-1)*lag + 1];
+      next_points[i] = ts[i + m*lag];
     }
 
-    auto slope_intercept = rlfd::delay::GammaTest(ts_embedded.topRows(ts_embedded.rows()-1), next_points, nn);
-    gamma_dimension[m-2] = slope_intercept[1];
-
-//    Eigen::MatrixXd mat(ts_embedded.rows()-1, ts_embedded.cols() + 1);
-//    mat << ts_embedded.topRows(ts_embedded.rows()-1), next_points;
+    auto slope_intercept = rlfd::delay::GammaTest(ts_embedded.topRows(M), next_points, nn);
+    gamma_dimension[m-1] = std::abs(slope_intercept[1]);
   }
 
   return gamma_dimension;
