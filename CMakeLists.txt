@@ -44,6 +44,9 @@ TARGET_LINK_LIBRARIES(delay-embedding "-lmatio -lz")
 ADD_EXECUTABLE(increasing-embedding src/IncreasingEmbedding.cc)
 TARGET_LINK_LIBRARIES(increasing-embedding "-lmatio -lz")
 
+ADD_EXECUTABLE(automated-embedding src/AutomatedEmbedding.cc)
+TARGET_LINK_LIBRARIES(automated-embedding "-lmatio -lz")
+
 ADD_EXECUTABLE(mattodat src/MatToDat.cc)
 TARGET_LINK_LIBRARIES(mattodat "-lmatio -lz")
 
