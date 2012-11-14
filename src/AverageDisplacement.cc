@@ -91,6 +91,16 @@ int main(int argc, char** argv)
     ads = rlfd::delay::AverageDisplacement(ts, embedding_dimension, lag);
   }
 
+  // Find threshold point
+  double initial = (ads[2] - ads[0])/2.0;
+  std::cout << "# Initial slope: " << initial << std::endl;
+  for (int i = 2; i < ads.size() - 1; i++) {
+    if ((ads[i+1] - ads[i-1])/2.0 <= 0.4*initial) {
+      std::cout << "# 40% threshold: " << i << std::endl;
+      break;
+    }
+  }
+
   // Scale the statistics on 0 to 1 range
   double maxCoeff = ads.maxCoeff();
   double minCoeff = ads.minCoeff();
