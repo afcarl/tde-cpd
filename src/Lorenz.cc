@@ -22,11 +22,15 @@
 #include <boost/array.hpp>
 #include <boost/numeric/odeint.hpp>
 
+#include <getopt.h>
+
 using namespace boost::numeric::odeint;
 
-const double sigma = 10.0;
-const double R = 28.0;
-const double b = 8.0 / 3.0;
+double sigma = 10.0;
+double R = 28.0;
+double b = 8.0 / 3.0;
+double dt = 0.01;
+int npoints = 2500;
 
 typedef boost::array< double , 3 > state_type;
 
@@ -42,19 +46,64 @@ void write_lorenz( const state_type &x , const double t )
   std::cout << t << '\t' << x[0] << '\t' << x[1] << '\t' << x[2] << std::endl;
 }
 
+void print_usage(void)
+{
+  std::cout << "Generate points from the Lorenz attractor." << std::endl;
+  std::cout << "Lorenz, Edward N., 1963: Deterministic Nonperiodic Flow. J. Atmos. Sci., 20, 130–141." << std::endl;
+  std::cout << "doi: http://dx.doi.org/10.1175/1520-0469(1963)020<0130:DNF>2.0.CO;2" << std::endl;
+  std::cout << "Usage: " << std::endl;
+  std::cout << "  -b --beta     Default: 8/3" << std::endl;
+  std::cout << "  -d --delta    Delta t, the sampling interval. Default: 0.01" << std::endl;
+  std::cout << "  -h --help     This help message." << std::endl;
+  std::cout << "  -n --npoints  Number of points. Default 2500" << std::endl;
+  std::cout << "  -r --rho      Default: 28" << std::endl;
+  std::cout << "  -s --sigma    Default: 10" << std::endl;
+}
+
 int main(int argc, char **argv)
 {
   std::cout.precision(std::numeric_limits<double>::digits10);
-  if (argc != 3) {
-    std::cout << "Usage: " << argv[0] << " [Delta t] [Number of points]" << std::endl << std::endl;
-    std::cout << "Generate points from the Lorenz attractor." << std::endl;
-    std::cout << "Lorenz, Edward N., 1963: Deterministic Nonperiodic Flow. J. Atmos. Sci., 20, 130–141." << std::endl;
-    std::cout << "doi: http://dx.doi.org/10.1175/1520-0469(1963)020<0130:DNF>2.0.CO;2" << std::endl;
-    std::cout << "Parameters: sigma = 10, rho = 28, beta = 8/3" << std::endl;
-    return -1;
+
+  // Parse arguments
+  static struct option long_options[] =
+  {
+    {"sigma", required_argument, 0, 's'},
+    {"rho", required_argument, 0, 'r'},
+    {"beta", required_argument, 0, 'b'},
+    {"delta", required_argument, 0, 'd'},
+    {"npoints", required_argument, 0, 'n'},
+    {"help", no_argument, 0, 'h'},
+    {0, 0, 0, 0}
+  };
+
+  int option_index = 0;
+  int c;
+  while ((c = getopt_long(argc, argv, "s:r:b:d:n:h", long_options, &option_index)) != -1)
+  {
+    switch (c)
+    {
+      case 's' :
+        sigma = std::stod(optarg);
+        break;
+      case 'r' :
+        R = std::stod(optarg);
+        break;
+      case 'b':
+        b = std::stod(optarg);
+        break;
+      case 'd':
+        dt = std::stod(optarg);
+        break;
+      case 'n':
+        npoints = std::stod(optarg);
+        break;
+      case 'h':
+      default:
+        print_usage();
+        return -1;
+    }
   }
-  double dt = std::stod(argv[1]);
-  int npoints = std::stoi(argv[2])-1;
+
   state_type x0 = { 1.0/10.0 , -1.0/5.0 , 3.0/10.0 }; // initial conditions
   runge_kutta4< state_type > stepper;
   integrate_n_steps(stepper, lorenz, x0, /*t0*/ 0.0, dt, npoints, write_lorenz);
