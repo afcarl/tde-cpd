@@ -6,11 +6,9 @@ International Journal of Computer Vision (IJCV) Special Issue on Learning for Vi
 
 and is available at [http://www.cc.gatech.edu/~borg/ijcv_psslds/]
 
-We simplified the original .btf format to a simple 3-columns .dat.
+We simplified the original .btf format to a simple 5-columns table format.
 
-These were obtained by executing:
-$ paste ximage.btf yimage.btf label0.btf > sequence1.btf
+The sequence files can be produced in one line with:
 
-A 5-columns file containing the head angle and the corresponding sine can be produced in one line with:
-paste label0.btf ximage.btf yimage.btf timage.btf <(cat timage.btf | \
+$ paste label0.btf ximage.btf yimage.btf timage.btf <(cat timage.btf | \
 Rscript -e 'cat(sin(as.numeric(readLines("stdin"))), sep="\n")') > sequence1.dat
