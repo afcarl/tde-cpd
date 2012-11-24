@@ -11,5 +11,4 @@ do
 done
 FILEPATH=$FILEPATH"/"$FILENAME
 
-./create-header.sh $args > $FILEPATH
-
+create-header.sh $args > $RLFD_PATH/$FILEPATH
