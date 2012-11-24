@@ -1,0 +1,15 @@
+#!/bin/bash
+
+args=$@
+FILENAME=$1".hh"
+
+FILEPATH="include"
+shift
+for arg in $@
+do
+  FILEPATH=$FILEPATH"/"$arg
+done
+FILEPATH=$FILEPATH"/"$FILENAME
+
+./create-header.sh $args > $FILEPATH
+
