@@ -40,11 +40,12 @@ class Line {
   operator std::string() const { return data; }    
 };
 
-void ReadFile(std::istream& file, std::vector<std::string>& out)
+template<class OutputIterator>
+void ReadFile(std::istream& file, OutputIterator out)
 {
   std::copy(std::istream_iterator<Line>(file), 
             std::istream_iterator<Line>(),
-            std::back_inserter(out));
+            out);
 }
 
 } // namespace utils
