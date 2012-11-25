@@ -32,6 +32,16 @@
 namespace rlfd {
 namespace utils {
 
+std::string GetExtension(const std::string& filename)
+{
+  std::string extension;
+  auto pos = filename.find_last_of(".");
+  if (pos != std::string::npos) {
+    extension = filename.substr(pos);
+  }
+  return extension;
+}
+
 /**
  * List the files under a directory
  * @param path The path to the directory to be listed
@@ -43,7 +53,7 @@ void ReadDir(const std::string& path, OutputIterator container)
   DIR *dir;
   struct dirent *entry;
 
-  if ((dir = opendir("./meta")) == NULL) {
+  if ((dir = opendir(path.c_str())) == NULL) {
     throw std::runtime_error(strerror(errno));
   } else {
     while ((entry = readdir(dir)) != NULL) {
