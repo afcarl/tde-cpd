@@ -21,6 +21,10 @@
 #define __DELAY_EMBEDDING_HH__
 
 #include <rlfd/Model.hh>
+#include <flann/flann.hpp>
+#include <rlfd/utils/ImportExport.hh>
+
+#include <memory>
 #include <Eigen/Core>
 
 namespace rlfd {
@@ -28,7 +32,69 @@ namespace delay {
 
 class DelayEmbedding : Model {
  public:
-  double distance(const Model& other) const override { return 0; };
+
+  /**
+   * Load an embedded time series into this object
+   * @param filename The filename to the matrix file
+   */
+  void LoadData(const std::string& filename)
+  {
+    // FIXME useless copy
+    Eigen::MatrixXd colMajor;
+    rlfd::utils::Import(filename, colMajor);
+    embeddedTs = colMajor;
+  }
+
+  /**
+   * Load the Kd-Tree index from a file
+   * @param filename The path to the index file
+   * @precondition The current embedded time series must be consistent with the
+   * saved index.
+   */
+  void LoadIndex(const std::string& filename)
+  {
+    data = std::unique_ptr<flann::Matrix<double>>(new flann::Matrix<double>
+                                                  (const_cast<double*>(embeddedTs.data()),
+                                                  embeddedTs.rows(), embeddedTs.cols()));
+    index = std::unique_ptr<flann::Index<flann::L2<double>>>(new flann::Index<flann::L2<double>>
+                                                             (*data, flann::SavedIndexParams(filename)));
+  }
+
+
+  /**
+   * Copy the embedded time series into this.
+   * Row or column-major conversions are handled by Eigen3
+   */
+  template<typename EigenMatrixType>
+  void SetMatrix(const EigenMatrixType& mat)
+  {
+    embeddedTs = mat;
+  }
+
+  /**
+   * Build an index file for the embedded vector
+   */
+  void BuildIndex()
+  {
+
+    data = std::unique_ptr<flann::Matrix<double>>(new flann::Matrix<double>
+                                                  (const_cast<double*>(embeddedTs.data()),
+                                                  embeddedTs.rows(), embeddedTs.cols()));
+
+    index = std::unique_ptr<flann::Index<flann::L2<double>>>(new flann::Index<flann::L2<double>>
+                                                             (*data, flann::KDTreeSingleIndexParams()));
+    index->buildIndex();
+  }
+
+  flann::Index<flann::L2<double>>& GetIndex(void)
+  {
+    return (*index);
+  }
+
+  const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>& GetMatrix(void) const
+  {
+    return embeddedTs;
+  }
 
   /**
    * Embbed a sclar time series
@@ -37,7 +103,8 @@ class DelayEmbedding : Model {
    * @param lag The lag parameter
    * @param out M x m matrix where M = N-(m-1)*lag
    */
-  static void Embed(const Eigen::VectorXd& ts, int m, int lag, Eigen::MatrixXd& out)
+  template<typename EigenMatrixType=Eigen::MatrixXd>
+  static void Embed(const Eigen::VectorXd& ts, int m, int lag, EigenMatrixType& out)
   {
     int M = ts.size() - (m-1)*lag;
     out.resize(M, m);
@@ -48,6 +115,21 @@ class DelayEmbedding : Model {
       }
     }
   }
+
+  /**
+   * @Override
+   */
+  double distance(const Model& other) const override { return 0; };
+
+ protected:
+  // Row-major is important for compability with flann
+  typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> EigenMatrixXdRowMajor;
+  EigenMatrixXdRowMajor embeddedTs;
+
+  // Maintain the embedded points in a KD-Tree for fast retrieval
+  std::unique_ptr<flann::Matrix<double>> data;
+  std::unique_ptr<flann::Index<flann::L2<double>>> index;
+
 };
 
 } // namespace delay

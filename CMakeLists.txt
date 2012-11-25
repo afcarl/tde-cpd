@@ -50,4 +50,10 @@ TARGET_LINK_LIBRARIES(automated-embedding "-lmatio -lz")
 ADD_EXECUTABLE(mattodat src/MatToDat.cc)
 TARGET_LINK_LIBRARIES(mattodat "-lmatio -lz")
 
+ADD_EXECUTABLE(getem src/GeometricTemplateMatching.cc)
+TARGET_LINK_LIBRARIES(getem "-lmatio -lz")
+
+ADD_EXECUTABLE(build-kdtree src/BuildKdTree.cc)
+TARGET_LINK_LIBRARIES(build-kdtree "-lmatio -lz")
+
 ADD_EXECUTABLE(lorenz src/Lorenz.cc)
