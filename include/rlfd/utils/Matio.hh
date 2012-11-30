@@ -1,6 +1,6 @@
 /**
  * Skills segmentation and learning for Robot Learning by Demonstration
- * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca> 
+ * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,37 +26,38 @@
 namespace rlfd {
 namespace utils {
 
-class Matio : public Matrixio
+template<typename MatrixType=Eigen::MatrixXd>
+class Matio : public Matrixio<MatrixType>
 {
  public:
   Matio() : fp_(NULL) {};
   virtual ~Matio() {};
 
   void Open(const std::string& filename) throw(std::runtime_error)
-  { 
+  {
     fp_ = Mat_Open(filename.c_str(), MAT_ACC_RDONLY);
     if (fp_ == NULL) {
       throw std::runtime_error("Failed to open mat file");
     }
   }
 
-  void Read(Eigen::MatrixXd& out) throw(std::runtime_error)
+  void Read(MatrixType& out) throw(std::runtime_error)
   {
     // @FIXME Just read the first variable instead of "y"
     Read(std::string("y"), out);
   }
 
-  void Read(const std::string& name, Eigen::MatrixXd& out) throw(std::runtime_error)
+  void Read(const std::string& name, MatrixType& out) throw(std::runtime_error)
   {
     matvar_t* matvar = Mat_VarRead(fp_, const_cast<char*>(name.c_str()));
     if (matvar == NULL) {
       throw std::runtime_error(std::string("Failed to read variable") + name);
     }
 
-    out = Eigen::MatrixXd::Map((double*) matvar->data, matvar->dims[0], matvar->dims[1]);  
+    out = MatrixType::Map((double*) matvar->data, matvar->dims[0], matvar->dims[1]);
 
     Mat_VarFree(matvar);
-  } 
+  }
 
   void Close(void) throw(std::runtime_error)
   {

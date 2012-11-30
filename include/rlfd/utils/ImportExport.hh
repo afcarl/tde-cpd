@@ -1,6 +1,6 @@
 /**
  * Skills segmentation and learning for Robot Learning by Demonstration
- * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca> 
+ * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -31,23 +31,25 @@ namespace rlfd {
 namespace utils {
 
 // Read from stdin
-void Import(Eigen::MatrixXd& out)
+template<typename MatrixType=Eigen::MatrixXd>
+void Import(MatrixType& out)
 {
-  rlfd::utils::Tabulario mat;
+  rlfd::utils::Tabulario<MatrixType> mat;
   mat.Read(out);
 }
 
-void Import(const std::string& filename, Eigen::MatrixXd& out) 
+template<typename MatrixType=Eigen::MatrixXd>
+void Import(const std::string& filename, MatrixType& out)
 {
   // @TODO Rely on extensions, for now
   std::string extension = filename.substr(filename.find_last_of(".") + 1);
 
-  rlfd::utils::Matrixio* mat; 
+  rlfd::utils::Matrixio<MatrixType>* mat;
 
   if (extension == "mat") {
-    mat = new rlfd::utils::Matio(); 
+    mat = new rlfd::utils::Matio<MatrixType>();
   } else {
-    mat = new rlfd::utils::Tabulario();
+    mat = new rlfd::utils::Tabulario<MatrixType>();
   }
 
   mat->Open(filename);

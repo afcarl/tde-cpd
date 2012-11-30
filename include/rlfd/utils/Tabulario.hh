@@ -1,6 +1,6 @@
 /**
  * Skills segmentation and learning for Robot Learning by Demonstration
- * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca> 
+ * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,7 +34,8 @@
 namespace rlfd {
 namespace utils {
 
-class Tabulario : public Matrixio
+template<typename MatrixType=Eigen::MatrixXd>
+class Tabulario : public Matrixio<MatrixType>
 {
  public:
   Tabulario() {};
@@ -65,7 +66,7 @@ class Tabulario : public Matrixio
       std::getline(is, l.data);
       return is;
     }
-    operator std::string() const { return data; }    
+    operator std::string() const { return data; }
   };
 
  public:
@@ -75,15 +76,15 @@ class Tabulario : public Matrixio
   }
 
   void Open(const std::string& filename) throw(std::runtime_error)
-  { 
+  {
     file = new std::ifstream(filename, std::ifstream::in);
   }
 
-  void Read(Eigen::MatrixXd& out) throw(std::runtime_error)
+  void Read(MatrixType& out) throw(std::runtime_error)
   {
     // Read all lines
     std::vector<std::string> lines;
-    std::copy(std::istream_iterator<Line>(file ? *file: std::cin), 
+    std::copy(std::istream_iterator<Line>(file ? *file: std::cin),
               std::istream_iterator<Line>(),
               std::back_inserter(lines));
 
@@ -94,7 +95,7 @@ class Tabulario : public Matrixio
     // Copy each element to the matrix
     int i = 0;
     for (auto line : lines) {
-      std::vector<std::string> tokens; 
+      std::vector<std::string> tokens;
       split_line(line, tokens);
 
       int j = 0;
@@ -104,7 +105,7 @@ class Tabulario : public Matrixio
       }
       i += 1;
     }
-  } 
+  }
 
   void Close(void) throw(std::runtime_error)
   {
