@@ -30,9 +30,9 @@ int main(int argc, char** argv)
     return -1;
   }
   // Import 
-  rlfd::utils::Matio mat;
-  mat.Open(argv[1]);
   Eigen::MatrixXd out;
+  rlfd::utils::Matio<Eigen::MatrixXd> mat;
+  mat.Open(argv[1]);
   mat.Read(out);
   mat.Close();
 
