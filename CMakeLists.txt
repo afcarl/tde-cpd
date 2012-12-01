@@ -27,7 +27,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/external/odeint)
 
 ADD_EXECUTABLE(kohlmorgen-lemm src/KohlmorgenLemm.cc)
-TARGET_LINK_LIBRARIES(kohlmorgen-lemm ${FLANN_LIBS} ${FFTW_LIBRARIES})
+TARGET_LINK_LIBRARIES(kohlmorgen-lemm ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
 
 ADD_EXECUTABLE(autocorrelation src/Autocorrelation.cc)
 TARGET_LINK_LIBRARIES(autocorrelation ${FFTW_LIBRARIES} "-lmatio -lz")
