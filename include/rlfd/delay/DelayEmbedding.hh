@@ -20,7 +20,6 @@
 #ifndef __DELAY_EMBEDDING_HH__
 #define __DELAY_EMBEDDING_HH__
 
-#include <rlfd/Model.hh>
 #include <flann/flann.hpp>
 #include <rlfd/utils/ImportExport.hh>
 
@@ -30,20 +29,11 @@
 namespace rlfd {
 namespace delay {
 
-class DelayEmbedding : Model {
+class DelayEmbedding
+{
  public:
-
-  /**
-   * Load an embedded time series into this object
-   * @param filename The filename to the matrix file
-   */
-  void LoadData(const std::string& filename)
-  {
-    // FIXME useless copy
-    Eigen::MatrixXd colMajor;
-    rlfd::utils::Import(filename, colMajor);
-    embeddedTs = colMajor;
-  }
+  // Row-major is important for compability with flann
+  typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> EigenMatrixXdRowMajor;
 
   /**
    * Load the Kd-Tree index from a file
@@ -60,7 +50,6 @@ class DelayEmbedding : Model {
                                                              (*data, flann::SavedIndexParams(filename)));
   }
 
-
   /**
    * Copy the embedded time series into this.
    * Row or column-major conversions are handled by Eigen3
@@ -72,7 +61,8 @@ class DelayEmbedding : Model {
   }
 
   /**
-   * Build an index file for the embedded vector
+   * Instanciate a new kd-tree index on the points contained in the internal
+   * matrix initialized by SetMatrix.
    */
   void BuildIndex()
   {
@@ -86,11 +76,17 @@ class DelayEmbedding : Model {
     index->buildIndex();
   }
 
+  /**
+   * @return A non-const reference to the kd-tree index
+   */
   flann::Index<flann::L2<double>>& GetIndex(void)
   {
     return (*index);
   }
 
+  /**
+   * @return a const reference to the row-major matrix used to store the points
+   */
   const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>& GetMatrix(void) const
   {
     return embeddedTs;
@@ -116,14 +112,7 @@ class DelayEmbedding : Model {
     }
   }
 
-  /**
-   * @Override
-   */
-  double distance(const Model& other) const override { return 0; };
-
  protected:
-  // Row-major is important for compability with flann
-  typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> EigenMatrixXdRowMajor;
   EigenMatrixXdRowMajor embeddedTs;
 
   // Maintain the embedded points in a KD-Tree for fast retrieval
