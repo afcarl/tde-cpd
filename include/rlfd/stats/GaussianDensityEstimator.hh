@@ -22,13 +22,27 @@
 
 #include <Eigen/Core>
 #include <flann/flann.hpp>
+#include <numeric>
 
 namespace rlfd {
 namespace stats {
 
 class GaussianDensityEstimator
 {
-  constexpr double pi(void) { return std::acos(-1.0); }
+ public:
+  /**
+   * Initialize a Gaussian Density estimator with autocalibration of the
+   * bandwidth based on average distance to the d nearest neighbors
+   * @param d The knn parameter in EstimateSigma
+   */
+  GaussianDensityEstimator(int d = 4, double sigma = 1.0) : d_(d), sigma_(sigma) {};
+
+  static constexpr double Pi() { return std::acos(-1.0); }
+
+  double operator()(const Eigen::MatrixXd& ts, const Eigen::MatrixXd& tsOther)
+  {
+    return Distance(ts, tsOther, sigma_, d_);
+  }
 
   /**
    * Estimate the pdf only in a fixed-size window
@@ -38,17 +52,17 @@ class GaussianDensityEstimator
    * @param W The window size
    *
    */
-  static double DistanceWindowed(const Eigen::MatrixXd& X, int sigma, int d, int W=50)
+  static double Distance(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Xprime, int sigma, int d)
   {
-    double 4sigma2 = 4.0*std::pow(sigma, 2);
-    double normalization = 1.0/(std::pow(W, 2)*std::pow(4sigma2, d/2.0));
+    double foursigma2 = 4.0*std::pow(sigma, 2);
+    double normalization = 1.0/(std::pow(X.rows(), 2)*std::pow(foursigma2 * Pi(), d/2.0));
 
     double sum = 0.0;
-    for (int w = 0; w < W-1; w++) {
-      for (int v = 0; v < W-1; v++) {
-        sum += std::exp(-1.0 * (X.row(tbar - w) - W.row(tbar - v)).squaredNorm()/4sigma2);
-        sum += std::exp(-1.0 * (X.row(tbar - w) - X.row(t - v)).squaredNorm()/4sigma2)*-2.0;
-        sum += std::exp(-1.0 * (X.row(t - w) - X.row(t - v)).squaredNorm()/4sigma2);
+    for (int w = 0; w < X.rows(); w++) {
+      for (int v = 0; v < Xprime.rows(); v++) {
+        sum += std::exp(-1.0 * (Xprime.row(w) - Xprime.row(v)).squaredNorm()/foursigma2);
+        sum += std::exp(-1.0 * (Xprime.row(w) - X.row(v)).squaredNorm()/foursigma2)*-2.0;
+        sum += std::exp(-1.0 * (X.row(w) - X.row(v)).squaredNorm()/foursigma2);
       }
     }
 
@@ -90,6 +104,28 @@ class GaussianDensityEstimator
     // Compute the average over the whole sample
     return avg_dists.mean();
   }
+
+  void Calibrate(const Eigen::MatrixXd& sample, int knn)
+  {
+    // TODO get rid of this copying
+    flann::Matrix<double> input(new double[sample.rows()*sample.cols()], sample.rows(), sample.cols());
+    for (int i = 0; i  < sample.rows(); i++) {
+      for (int j = 0; j < sample.cols(); j++) {
+        input[i][j] = sample(i, j);
+      }
+    }
+
+    flann::Index<flann::L2<double> > index(input, flann::KDTreeSingleIndexParams());
+    index.buildIndex();
+
+    sigma_ = EstimateSigma(sample, knn, index);
+    d_ = knn;
+  }
+
+ private:
+
+  int d_;
+  double sigma_;
 
 };
 
