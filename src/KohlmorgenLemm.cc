@@ -1,6 +1,6 @@
 /**
  * Skills segmentation and learning for Robot Learning by Demonstration
- * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca> 
+ * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,51 +17,74 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#include <rlfd/segment/KohlmorgenLemm.hh>
+#include <rlfd/utils/ImportExport.hh>
 #include <rlfd/delay/DelayEmbedding.hh>
-#include <rlfd/delay/GammaTest.hh>
-#include <rlfd/utils/Gnuplot.hh>
-#include <rlfd/utils/Autocorrelation.hh>
+#include <rlfd/segment/KohlmorgenLemm.hh>
+#include <rlfd/stats/GaussianDensityEstimator.hh>
 
-#include <random>
+#include <limits>
+#include <iostream>
 
-int main(void)
+#include <getopt.h>
+
+void print_usage(void)
 {
-  rlfd::segment::KohlmorgenLemm<rlfd::delay::DelayEmbedding> segmenter();
-  // Synthetic example 
-  // Generate 500 uniformly distributed points x in the range 
-  // [0, 2pi] and add uniformly distributed
-  // noise component with a variance of 0.075
-  std::random_device rd; 
-  std::mt19937 gen(rd());
+  std::cout << "Execute the Kohlmorgen-Lemm algorithm on the data passed through STDIN" << std::endl;
+  std::cout << "Usage: kolmorgen-lemm [OPTION]" << std::endl;
+  std::cout << "  -m --dimension    The Embedding dimension." << std::endl;
+  std::cout << "  -d --delay        The lag value." << std::endl;
+}
 
-  const double pi = 3.14159265358979;
-  const int npoints = 500;
-  std::uniform_real_distribution<double> uniform(0.0, 2.0*pi);
-  std::normal_distribution<double> noise(0.0, std::sqrt(0.075));
+int main(int argc, char** argv)
+{
+  int embedding_dimension = 2;
+  int lag = 1;
 
-  std::vector<double> input(npoints);
-  std::vector<double> output(npoints);
-  for (int i = 0; i < npoints; i++) {
-      input[i] = uniform(gen);
-      output[i] = std::sin(input[i]) + noise(gen);   
+  // Parse arguments
+  static struct option long_options[] =
+  {
+    {"dimension", required_argument, 0, 'm'},
+    {"delay", required_argument, 0, 'd'},
+    {0, 0, 0, 0}
+  };
+
+  int option_index = 0;
+  int c;
+  while ((c = getopt_long(argc, argv, "m:d:", long_options, &option_index)) != -1)
+  {
+    switch (c)
+    {
+      case 'm' :
+        embedding_dimension = std::stoi(optarg);
+        break;
+      case 'd' :
+        lag = std::stoi(optarg);
+        break;
+      default:
+        print_usage();
+        return -1;
+    }
   }
 
-//  rlfd::utils::Gnuplot gnuplot;
-//  gnuplot(input, output); 
+  Eigen::MatrixXd ts;
+  if (optind < argc) {
+    rlfd::utils::Import(argv[optind], ts);
+  } else {
+    // Read from stdin
+    rlfd::utils::Import(ts);
+  }
 
-  // Run the gamma test
-  //rlfd::GammaTest gamma;
-  //auto gamma_statistic = gamma(Eigen::VectorXd::Map(&input[0], input.size()), Eigen::VectorXd::Map(&output[0], output.size()));
-  //std::cout << gamma_statistic << std::endl;
+  // Embed the input points
+  Eigen::MatrixXd embTs;
+  rlfd::delay::DelayEmbedding::Embed(ts, embedding_dimension, lag, embTs);
 
-  // Compute the autocorrelation
-  Eigen::VectorXd acoeffs;
-  rlfd::utils::Autocorrelation(Eigen::VectorXd::Map(&output[0], output.size()), acoeffs);
-  std::cout << acoeffs << std::endl;
+  // Estimate the sigma parameter for KDE
+  rlfd::stats::GaussianDensityEstimator kde;
+  kde.Calibrate(embTs, 4);
 
-  std::cout << "Input to FFT" << std::endl;
-  std::cout << Eigen::VectorXd::Map(&output[0], output.size()) << std::endl; 
+  rlfd::segment::KohlmorgenLemm<rlfd::stats::GaussianDensityEstimator> segmenter(kde);
+
+//  segmenter.AddObservation(x)
 
   return 0;
 }
