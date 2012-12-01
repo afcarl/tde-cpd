@@ -1,6 +1,6 @@
 /**
  * Skills segmentation and learning for Robot Learning by Demonstration
- * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca> 
+ * Copyright (C) 2012  Pierre-Luc Bacon <pierre-luc.bacon@mail.mcgill.ca>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,6 +21,7 @@
 #define __KOHLMORGEN_LEMM_HH__
 
 #include <rlfd/Model.hh>
+#include <rlfd/delay/DelayEmbedding.hh>
 
 #include <Eigen/Core>
 #include <deque>
@@ -34,40 +35,43 @@ namespace segment {
  * A class to perform time series segmentation.
  * It takes as a argument a Model type
  *
- * Implements a variant of:
- *
- * Kohlmorgen, J., & Lemm, S. (2001). A dynamic hmm
- * for on-line segmentation of sequential data. Advances in Neural Information Processing Systems
- * 14 (NIPS 2001) (pp. 793–800). Vancouver, British
- * Columbia, Canada: MIT Press.
+ * Kohlmorgen, J., & Lemm, S. (2001). A dynamic HMM for on-line segmenation of
+ * sequation data. Advances in Neural Information Processing Systems 14 (NIPS
+ * 2001) (pp. 793-800). Vancouver, British Columbia, Canada: MIT Press.
  */
-template <class WindowModel>
+template <class DistanceFunctorType>
 class KohlmorgenLemm
 {
  public:
-  KohlmorgenLemm(unsigned W=50, double varsigma=0, double k=0);
+  KohlmorgenLemm(DistanceFunctorType& distanceFunctor, unsigned W=50, double varsigma=0, double k=0) :
+      distanceFunctor(&distanceFunctor), W(W), varsigma(varsigma), k(k) {};
+
   virtual ~KohlmorgenLemm() {};
 
- private:
+ protected:
+  /**
+   * Hidden state of the HMM that we are trying to infer
+   */
   struct State {
-    State(double cpath, Model* model, Model* prototype): 
-        cpath(cpath), model(model), prototype(prototype) {}
+    State(double cpath, int index, int prototypeIndex):
+        cpath(cpath), index(index), prototypeIndex(prototypeIndex) {}
 
-    // Cost of the c-path finishing at this state
+    // Cost of the c-path finishing in this state
     double cpath;
 
-    // Model computed for this state. 
-    // Can be a PDF or delay embedding 
-    std::shared_ptr<Model> model;
+    int index;
 
-    // The prototype assigned to this state
-    std::shared_ptr<Model> prototype;
+    int prototypeIndex;
   };
   std::deque<State> states;
 
   // Maintain a history of the optimal paths costs
   std::deque<double> opaths;
 
+  DistanceFunctorType* distanceFunctor;
+
+  double W;
+  // Regularization constants
   double varsigma;
   double k;
 
@@ -78,38 +82,47 @@ class KohlmorgenLemm
   constexpr double GetRegularizer() { return 2*std::pow(varsigma, 2)*std::log(k); }
 
   /**
-   * Add an observation (delay-embedded). 
+   * Add an observation (delay-embedded).
    * When the number of observations is sufficient
-   * to build a model, the segmentation will get 
+   * to build a model, the segmentation will get
    * updated automatically
-   * @param x An observation vector 
+   * @param x An observation vector
    */
-  void AddObservation(const Eigen::VectorXd& x)
+  void AddState(const Eigen::MatrixXd& embTs, int T)
   {
-    // Compute a new model 
-    Model* latest_model = new WindowModel(); 
-    states.push_front(State(latest_model->distance(*(states[0].model)), latest_model, latest_model));
+    auto last_window = embTs.block(T-W, 0, W, embTs.cols());
 
-    // t=0 to t-1
-    for (unsigned t = 1; t < states.size()-1; t++) {
-      // Cost for a constrained path finishing with the new model r
-      // starting at 0 and finishing at time step t 
-      states.front().cpath = latest_model->distance(*(states[t].model)) + std::min(states.front().cpath, opaths[t-1] + GetRegularizer()); 
-      if (states.front().cpath < opaths[t]) {
-        opaths[t] = states.front().cpath;
-        states[t].prototype = std::shared_ptr<Model>(latest_model); // Not sure if that makes sense
-      } 
+    // Add a new state to the HMM for this observation
+    auto distance = (*distanceFunctor)(last_window,
+                                    embTs.block((T-1)-W, 0, W, embTs.cols()));
+    states.push_front(State(distance, T, T));
+    State& latest_state = states.front();
+
+    // Compute the cpath at T-1 for the new state (we don't have it already)
+    for (int t = W+1; t < T-1; t++) {
+      // Compute the distance of the new window to the window at time t
+      auto distance = (*distanceFunctor)(last_window,
+                                      embTs.block(t-W, 0, W, embTs.cols()));
+
+
+      latest_state.cpath = distance + std::min(latest_state.cpath, opaths[t-1] + GetRegularizer());
+
+      if (latest_state.cpath < opaths[t]) {
+        opaths[t] = latest_state.cpath;
+      }
     }
 
-    // Compute the minimum cost for each state
+    // Recomputing the cpath for each state finishing at time T
     for (unsigned s = 0; s < states.size(); s++) {
-      states[s].cpath = latest_model->distance(*(states[s].model)) + std::min(states[s].cpath, opaths.front() + GetRegularizer());
+      // Get the window corresponding to this state
+      auto swindow = embTs.block(states[s].index-W, 0, W, embTs.cols());
+      auto distance = (*distanceFunctor)(swindow, last_window);
+      states[s].cpath = distance + std::min(states[s].cpath, opaths.front() + GetRegularizer());
     }
 
     // Find the mininum cost constrained path
     auto mincost_state = std::min_element(states.begin(), states.end(), [](const State& a, const State& b) { return a.cpath < b.cpath; });
     opaths.push_front(mincost_state->cpath);
-    states.front().prototype = mincost_state->model; 
   }
 };
 
