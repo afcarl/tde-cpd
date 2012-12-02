@@ -39,18 +39,22 @@ int main(int argc, char** argv)
 {
   int embedding_dimension = 2;
   int lag = 1;
+  double W = 50;
+  double regularizer = 0;
 
   // Parse arguments
   static struct option long_options[] =
   {
     {"dimension", required_argument, 0, 'm'},
     {"delay", required_argument, 0, 'd'},
+    {"regularizer", required_argument, 0, 'C'},
+    {"window", required_argument, 0, 'W'},
     {0, 0, 0, 0}
   };
 
   int option_index = 0;
   int c;
-  while ((c = getopt_long(argc, argv, "m:d:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "m:d:C:W:", long_options, &option_index)) != -1)
   {
     switch (c)
     {
@@ -59,6 +63,12 @@ int main(int argc, char** argv)
         break;
       case 'd' :
         lag = std::stoi(optarg);
+        break;
+      case 'C' :
+        regularizer = std::stod(optarg);
+        break;
+      case 'W':
+        W = std::stoi(optarg);
         break;
       default:
         print_usage();
@@ -80,11 +90,15 @@ int main(int argc, char** argv)
 
   // Estimate the sigma parameter for KDE
   rlfd::stats::GaussianDensityEstimator kde;
-  kde.Calibrate(embTs, 4);
+  kde.Calibrate(embTs);
+  std::cout << "Sigma : " << kde.GetSigma() << std::endl;
 
-  rlfd::segment::KohlmorgenLemm<rlfd::stats::GaussianDensityEstimator> segmenter(kde);
+  std::cout.precision(std::numeric_limits<double>::digits10);
+  rlfd::segment::KohlmorgenLemm<rlfd::stats::GaussianDensityEstimator> segmenter(kde, W, regularizer);
 
-//  segmenter.AddObservation(x)
+  for (int t = W; t < embTs.size(); t++) {
+    segmenter.AddObservation(embTs, t);
+  }
 
   return 0;
 }
