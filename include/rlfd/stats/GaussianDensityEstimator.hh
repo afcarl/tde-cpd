@@ -37,6 +37,10 @@ class GaussianDensityEstimator
    */
   GaussianDensityEstimator(int d = 4, double sigma = 1.0) : d_(d), sigma_(sigma) {};
 
+  double GetSigma() { return sigma_; }
+
+  double GetDimensionality() { return d_; }
+
   static constexpr double Pi() { return std::acos(-1.0); }
 
   double operator()(const Eigen::MatrixXd& ts, const Eigen::MatrixXd& tsOther)
@@ -52,14 +56,15 @@ class GaussianDensityEstimator
    * @param W The window size
    *
    */
-  static double Distance(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Xprime, int sigma, int d)
+  static double Distance(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Xprime, double sigma, int d)
   {
-    double foursigma2 = 4.0*std::pow(sigma, 2);
-    double normalization = 1.0/(std::pow(X.rows(), 2)*std::pow(foursigma2 * Pi(), d/2.0));
+    int W = X.rows();
+    double foursigma2 = 4.0*std::pow(sigma, 2.0);
+    double normalization = 1.0/(std::pow(W, 2)*std::pow(foursigma2 * Pi(), ((double) d)/2.0));
 
     double sum = 0.0;
-    for (int w = 0; w < X.rows(); w++) {
-      for (int v = 0; v < Xprime.rows(); v++) {
+    for (int w = 0; w < W; w++) {
+      for (int v = 0; v < W; v++) {
         sum += std::exp(-1.0 * (Xprime.row(w) - Xprime.row(v)).squaredNorm()/foursigma2);
         sum += std::exp(-1.0 * (Xprime.row(w) - X.row(v)).squaredNorm()/foursigma2)*-2.0;
         sum += std::exp(-1.0 * (X.row(w) - X.row(v)).squaredNorm()/foursigma2);
@@ -96,7 +101,7 @@ class GaussianDensityEstimator
     for (int i = 0; i < X.rows(); i++) {
       double avg_dist = 0.0;
       for (int k = 1; k < knn; k++) {
-        avg_dist += dists[i][k];
+        avg_dist += std::sqrt(dists[i][k]);
       }
       avg_dists(i) = avg_dist/((double) (knn - 1));
     }
@@ -105,7 +110,7 @@ class GaussianDensityEstimator
     return avg_dists.mean();
   }
 
-  void Calibrate(const Eigen::MatrixXd& sample, int knn)
+  void Calibrate(const Eigen::MatrixXd& sample)
   {
     // TODO get rid of this copying
     flann::Matrix<double> input(new double[sample.rows()*sample.cols()], sample.rows(), sample.cols());
@@ -118,8 +123,8 @@ class GaussianDensityEstimator
     flann::Index<flann::L2<double> > index(input, flann::KDTreeSingleIndexParams());
     index.buildIndex();
 
-    sigma_ = EstimateSigma(sample, knn, index);
-    d_ = knn;
+    sigma_ = EstimateSigma(sample, sample.cols(), index);
+    d_ = sample.cols();
   }
 
  private:
