@@ -24,7 +24,7 @@
 #include <rlfd/delay/DelayEmbedding.hh>
 
 #include <Eigen/Core>
-#include <deque>
+#include <vector>
 #include <memory>
 #include <numeric>
 
@@ -43,87 +43,68 @@ template <class DistanceFunctorType>
 class KohlmorgenLemm
 {
  public:
-  KohlmorgenLemm(DistanceFunctorType& distanceFunctor, unsigned W=50, double varsigma=0, double k=0) :
-      distanceFunctor(&distanceFunctor), W(W), varsigma(varsigma), k(k) {};
+  KohlmorgenLemm(DistanceFunctorType& distanceFunctor, int W=50, double C=0.0) :
+      distanceFunctor(&distanceFunctor), W(W), regularizer(C)
+  {
+    cpaths.resize(1, 0.0);
+    opaths.resize(1, 0.0);
+    distances.resize(1, 0.0);
+  }
 
   virtual ~KohlmorgenLemm() {};
 
  protected:
-  /**
-   * Hidden state of the HMM that we are trying to infer
-   */
-  struct State {
-    State(double cpath, int index, int prototypeIndex):
-        cpath(cpath), index(index), prototypeIndex(prototypeIndex) {}
-
-    // Cost of the c-path finishing in this state
-    double cpath;
-
-    int index;
-
-    int prototypeIndex;
-  };
-  std::deque<State> states;
-
-  // Maintain a history of the optimal paths costs
-  std::deque<double> opaths;
+  std::vector<double> cpaths;
+  std::vector<double> opaths;
+  std::vector<double> distances;
 
   DistanceFunctorType* distanceFunctor;
 
-  double W;
-  // Regularization constants
-  double varsigma;
-  double k;
+  int W;
+  double regularizer;
 
  public:
   /**
    * Regularization constant C that subsumes varsigma and k
    */
-  constexpr double GetRegularizer() { return 2*std::pow(varsigma, 2)*std::log(k); }
+  double GetRegularizer() { return regularizer; }
 
-  /**
-   * Add an observation (delay-embedded).
-   * When the number of observations is sufficient
-   * to build a model, the segmentation will get
-   * updated automatically
-   * @param x An observation vector
-   */
-  void AddState(const Eigen::MatrixXd& embTs, int T)
+  void AddObservation(const Eigen::MatrixXd& embTs, int T)
   {
-    auto last_window = embTs.block(T-W, 0, W, embTs.cols());
+    auto latest_window = embTs.block(T-(W-1), 0, W, embTs.cols());
 
-    // Add a new state to the HMM for this observation
-    auto distance = (*distanceFunctor)(last_window,
-                                    embTs.block((T-1)-W, 0, W, embTs.cols()));
-    states.push_front(State(distance, T, T));
-    State& latest_state = states.front();
+    // C_T(T-1)
+    double cpath_latest = 0.0;
+    for (unsigned t = 0; t < cpaths.size(); t++) {
+      if (t == 0) {
+        cpath_latest = 0.0;
+      } else {
+        cpath_latest = std::min(cpath_latest, opaths[t-1] + GetRegularizer());
+      }
 
-    // Compute the cpath at T-1 for the new state (we don't have it already)
-    for (int t = W+1; t < T-1; t++) {
-      // Compute the distance of the new window to the window at time t
-      auto distance = (*distanceFunctor)(last_window,
-                                      embTs.block(t-W, 0, W, embTs.cols()));
+      auto window_t = embTs.block(t, 0, W, embTs.cols());
+      distances[t] = (*distanceFunctor)(latest_window, window_t);
+      cpath_latest += distances[t];
 
-
-      latest_state.cpath = distance + std::min(latest_state.cpath, opaths[t-1] + GetRegularizer());
-
-      if (latest_state.cpath < opaths[t]) {
-        opaths[t] = latest_state.cpath;
+      if (cpath_latest < opaths[t]) {
+        opaths[t] = cpath_latest;
+        std::cerr << "Updating opath" << std::endl;
       }
     }
+    std::cerr << "C_T(T-1) " << cpath_latest << std::endl;
+    cpaths.push_back(cpath_latest);
+    distances.push_back(0.0);
 
-    // Recomputing the cpath for each state finishing at time T
-    for (unsigned s = 0; s < states.size(); s++) {
-      // Get the window corresponding to this state
-      auto swindow = embTs.block(states[s].index-W, 0, W, embTs.cols());
-      auto distance = (*distanceFunctor)(swindow, last_window);
-      states[s].cpath = distance + std::min(states[s].cpath, opaths.front() + GetRegularizer());
+    // C_T(T)
+    for (unsigned t = 0; t < cpaths.size(); t++) {
+      cpaths[t] = distances[t] + std::min(cpaths[t], opaths.back() + GetRegularizer());
     }
+    std::cerr << "C_T(T) updated" << std::endl;
 
-    // Find the mininum cost constrained path
-    auto mincost_state = std::min_element(states.begin(), states.end(), [](const State& a, const State& b) { return a.cpath < b.cpath; });
-    opaths.push_front(mincost_state->cpath);
+    // Choose the state with the minimum cost
+    opaths.push_back((*std::min_element(cpaths.begin(), cpaths.end())));
   }
+
 };
 
 } // namespace segmentation
