@@ -37,6 +37,8 @@ void print_usage(void)
 
 int main(int argc, char** argv)
 {
+  std::cout.precision(std::numeric_limits<double>::digits10);
+
   int embedding_dimension = 2;
   int lag = 1;
   double W = 50;
@@ -78,6 +80,7 @@ int main(int argc, char** argv)
 
   Eigen::MatrixXd ts;
   if (optind < argc) {
+    std::cout << "Importing from file" << std::endl;
     rlfd::utils::Import(argv[optind], ts);
   } else {
     // Read from stdin
@@ -92,11 +95,12 @@ int main(int argc, char** argv)
   rlfd::stats::GaussianDensityEstimator kde;
   kde.Calibrate(embTs);
   std::cout << "Sigma : " << kde.GetSigma() << std::endl;
+  std::cout << "d: " << kde.GetDimensionality() << std::endl;
+  std::cout << "W: " << W << std::endl;
 
-  std::cout.precision(std::numeric_limits<double>::digits10);
   rlfd::segment::KohlmorgenLemm<rlfd::stats::GaussianDensityEstimator> segmenter(kde, W, regularizer);
 
-  for (int t = W; t < embTs.size(); t++) {
+  for (int t = W; t < embTs.rows(); t++) {
     segmenter.AddObservation(embTs, t);
   }
 
