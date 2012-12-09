@@ -43,11 +43,6 @@ class GaussianDensityEstimator
 
   static constexpr double Pi() { return std::acos(-1.0); }
 
-  double operator()(const Eigen::MatrixXd& ts, const Eigen::MatrixXd& tsOther)
-  {
-    return Distance(ts, tsOther, sigma_, d_);
-  }
-
   /**
    * Estimate the pdf only in a fixed-size window
    * @param X Row vectors to be estimated.
@@ -56,18 +51,20 @@ class GaussianDensityEstimator
    * @param W The window size
    *
    */
-  static double Distance(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Xprime, double sigma, int d)
+  template<typename Derived>
+  double operator()(const Eigen::Block<Derived>& X, const Eigen::Block<Derived>& Xprime)
   {
     int W = X.rows();
-    double foursigma2 = 4.0*std::pow(sigma, 2.0);
-    double normalization = 1.0/(std::pow(W, 2)*std::pow(foursigma2 * Pi(), ((double) d)/2.0));
+    double foursigma2 = 4.0*std::pow(sigma_, 2.0);
+    double normalization = 1.0/(std::pow(W, 2)*std::pow(foursigma2 * Pi(), ((double) d_)/2.0));
+    int k = -1.0/foursigma2;
 
     double sum = 0.0;
     for (int w = 0; w < W; w++) {
       for (int v = 0; v < W; v++) {
-        sum += std::exp(-1.0 * (Xprime.row(w) - Xprime.row(v)).squaredNorm()/foursigma2);
-        sum += std::exp(-1.0 * (Xprime.row(w) - X.row(v)).squaredNorm()/foursigma2)*-2.0;
-        sum += std::exp(-1.0 * (X.row(w) - X.row(v)).squaredNorm()/foursigma2);
+        sum += std::exp(k*(Xprime.row(w) - Xprime.row(v)).squaredNorm());
+        sum += -2.0*std::exp(k*(Xprime.row(w) - X.row(v)).squaredNorm());
+        sum += std::exp(k*(X.row(w) - X.row(v)).squaredNorm());
       }
     }
 
