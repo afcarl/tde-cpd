@@ -19,6 +19,7 @@
  */
 #include <rlfd/utils/ImportExport.hh>
 #include <rlfd/delay/DelayEmbedding.hh>
+#include <rlfd/segment/CSegmentation.hh>
 #include <rlfd/segment/KohlmorgenLemm.hh>
 #include <rlfd/stats/GaussianDensityEstimator.hh>
 
@@ -26,6 +27,7 @@
 #include <iostream>
 
 #include <getopt.h>
+#include <Eigen/Core>
 
 void print_usage(void)
 {
@@ -98,11 +100,13 @@ int main(int argc, char** argv)
   std::cout << "d: " << kde.GetDimensionality() << std::endl;
   std::cout << "W: " << W << std::endl;
 
-  rlfd::segment::KohlmorgenLemm<rlfd::stats::GaussianDensityEstimator> segmenter(kde, W, regularizer);
-
-  for (int t = W; t < embTs.rows(); t++) {
-    segmenter.AddObservation(embTs, t);
-  }
+  //rlfd::segment::KohlmorgenLemm<rlfd::stats::GaussianDensityEstimator> segmenter(kde, W, regularizer);
+  //for (int t = W; t < embTs.rows(); t++) {
+  //  segmenter.AddObservation(embTs, t);
+  //}
+  rlfd::segment::CSegmentation<rlfd::stats::GaussianDensityEstimator> segmenter(kde, W, regularizer);
+  Eigen::initParallel();
+  segmenter(embTs);
 
   return 0;
 }
