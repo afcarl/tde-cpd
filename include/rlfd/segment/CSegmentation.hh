@@ -52,14 +52,11 @@ class CSegmentation
     // Initialize distance  matrix
     Eigen::MatrixXd distances(T-W, T-W);
     distances.setZero();
-    #pragma omp parallel for
-    for (int s = 0; s < distances.rows(); s++) {
-        for (int t = 0; t < s; t++) {
-          distances(s, t) = (*distanceFunctor)(ts.block(s, 0, W, ts.cols()), ts.block(t, 0, W, ts.cols()));
-          std::cout << "Distance d(" << s << "," << t << ") " << distances(s, t) << std::endl;
-        }
-    }
-    return;
+    std::cout << "Computing distances" << std::endl;
+
+    distanceFunctor->DistanceMatrix(ts, W, distances);
+
+    std::cout << "Done computing distances" << std::endl;
 
     // Init t=W
     Eigen::MatrixXd opaths(T-W, T-W);
@@ -75,7 +72,7 @@ class CSegmentation
     }
 
     // Termination at t = T
-    double ofinal = opaths.col(opaths.cols()-1).minCoeff();
+    //double ofinal = opaths.col(opaths.cols()-1).minCoeff();
   }
 
  protected:

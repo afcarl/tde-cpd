@@ -104,8 +104,8 @@ int main(int argc, char** argv)
   //for (int t = W; t < embTs.rows(); t++) {
   //  segmenter.AddObservation(embTs, t);
   //}
+
   rlfd::segment::CSegmentation<rlfd::stats::GaussianDensityEstimator> segmenter(kde, W, regularizer);
-  Eigen::initParallel();
   segmenter(embTs);
 
   return 0;
