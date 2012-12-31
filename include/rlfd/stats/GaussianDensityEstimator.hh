@@ -35,7 +35,7 @@ class GaussianDensityEstimator
    * bandwidth based on average distance to the d nearest neighbors
    * @param d The knn parameter in EstimateSigma
    */
-  GaussianDensityEstimator(int d = 4, double sigma = 1.0) : d_(d), sigma_(sigma) {};
+  GaussianDensityEstimator(double sigma = 1.0, int d = 4) : d_(d), sigma_(sigma) {};
 
   double GetSigma() { return sigma_; }
 
@@ -47,71 +47,79 @@ class GaussianDensityEstimator
    * Compute the distance matrix for overlapping windows spread appart by one
    * sample.
    */
-void DistanceMatrix(const Eigen::MatrixXd& ts, int W, Eigen::MatrixXd& distancesOut)
-{
-  double foursigma2 = 4.0*std::pow(sigma_, 2.0);
-  int k = -1.0/foursigma2;
-  double normalization = (1.0/(std::pow(W, 2)*std::pow(foursigma2 * Pi(), ((double) d_)/2.0)));
+  void DistanceMatrix(const Eigen::MatrixXd& ts, int W, Eigen::MatrixXd& distancesOut)
+  {
+    double foursigma2 = 4.0*std::pow(sigma_, 2.0);
+    double k = -1.0/foursigma2;
+    double normalization = (1.0/(std::pow(W, 2)*std::pow(foursigma2 * Pi(), ((double) d_)/2.0)));
 
-  const double* dataPtr = ts.data();
+    const double* dataPtr = ts.data();
 
-  // Pre-compute the self-sums
-  Eigen::VectorXd selfSums(ts.rows()-W);
-  for (int s = 0; s < ts.rows()-W; s++) {
-    const double* xPtr = dataPtr + W*(s+1);
-    double sum = 0.0;
-    for (int w = 0; w < W; w++) {
-      for (int v = 0; v < W; v++) {
-        double squaredNorm = 0.0;
-        for (int j = 0; j < W; j++) {
-          double norm = (xPtr + w + j*W) - (xPtr + v + j*W);
-          squaredNorm += norm*norm;
-        }
-        sum += std::exp(k*squaredNorm);
-      }
-    }
-    selfSums[s] = sum;
-  }
+    // Pre-compute the self-sums
+    Eigen::VectorXd selfSums(ts.rows()-W);
+    for (int s = 0; s < ts.rows()-W; s++) {
+      double sum = 0.0;
+      const double* xPtr = dataPtr + s;
+      //auto xblock = ts.block(s, 0, W, d_);
 
-  // Compute for each sample
-  for (int s = 1; s < ts.rows()-W; s++) {
-    const double* xprimePtr = dataPtr + W*(s+1);
-
-    // Up to diagonal
-    for (int t = 0; t < s; t++) {
-      const double* xPtr = xprimePtr + 1;
-
-      // Integrated Square Error computation
-      double crossSum = 0.0;
       for (int w = 0; w < W; w++) {
         for (int v = 0; v < W; v++) {
-
-          // Squared norm
-          double squaredNormCross = 0.0;
-          for (int j = 0; j < W; j++) {
-            double norm = (xprimePtr + w + j*W) - (xPtr + v + j*W);
-            squaredNormCross += norm*norm;
+          double squaredNorm = 0.0;
+          for (int j = 0; j < d_; j++) {
+            double norm = xPtr[w + j*W] - xPtr[v + j*W];
+            squaredNorm += norm*norm;
+            //std::cout << "xblock(" << w << ", " << j << ")" << xblock(w, j) << " vs " << xPtr[w + j*W] << std::endl;
           }
+          //std::cout << "Squared norm" << squaredNorm << std::endl;
+          //std::cout << (xblock.row(w) - xblock.row(v)).squaredNorm() << std::endl;
 
-          crossSum += -2.0*std::exp(k*squaredNormCross);
+          sum += std::exp(k*squaredNorm);
         }
       }
 
-      distancesOut(s, t) = normalization*(selfSums[s] + crossSum + selfSums[t]);
+      selfSums[s] = sum;
     }
+    //std::cout << selfSums << std::endl;
+
+    // Compute for each sample
+    for (int s = 1; s < ts.rows()-W; s++) {
+      const double* xprimePtr = dataPtr + W*(s+1);
+
+      // Up to diagonal
+      for (int t = 0; t < s; t++) {
+        const double* xPtr = xprimePtr + 1;
+
+        // Integrated Square Error computation
+        double crossSum = 0.0;
+        for (int w = 0; w < W; w++) {
+          for (int v = 0; v < W; v++) {
+
+            // Squared norm
+            double squaredNormCross = 0.0;
+            for (int j = 0; j < d_; j++) {
+              double norm = (xprimePtr + w + j*W) - (xPtr + v + j*W);
+              squaredNormCross += norm*norm;
+            }
+
+            crossSum += -2.0*std::exp(k*squaredNormCross);
+          }
+        }
+
+        distancesOut(s, t) = normalization*(selfSums[s] + crossSum + selfSums[t]);
+      }
+    }
+
   }
 
-}
-
-/**
- * Estimate the pdf only in a fixed-size window
- * @param X Row vectors to be estimated.
- * @param sigma Found by EstimateSigma
- * @param d The knn parameter in EstimateSigma
- * @param W The window size
- *
- */
-template<typename Derived>
+  /**
+   * Estimate the pdf only in a fixed-size window
+   * @param X Row vectors to be estimated.
+   * @param sigma Found by EstimateSigma
+   * @param d The knn parameter in EstimateSigma
+   * @param W The window size
+   *
+   */
+  template<typename Derived>
 double operator()(const Eigen::Block<Derived>& X, const Eigen::Block<Derived>& Xprime)
 {
   int W = X.rows();
@@ -185,6 +193,11 @@ static double EstimateSigma(const Eigen::MatrixXd& X, int knn, flann::Index<flan
   return avg_dists.mean();
 }
 
+/**
+ * Set parameters of this KDE instance using the EstimateSigma method.
+ * An index is created automatically for this purpose.
+ * @param sample Sample points from which to infer the parameters
+ */
 void Calibrate(const Eigen::MatrixXd& sample)
 {
   // TODO get rid of this copying
