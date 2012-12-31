@@ -29,59 +29,41 @@ namespace rlfd {
 namespace segment {
 
 /**
- * A class to perform time series segmentation.
- * It takes as a argument a Model type
+ * Implements the C-Segmentation algorithm from:
  *
- * Kohlmorgen, J., & Lemm, S. (2001). A dynamic HMM for on-line segmenation of
- * sequation data. Advances in Neural Information Processing Systems 14 (NIPS
- * 2001) (pp. 793-800). Vancouver, British Columbia, Canada: MIT Press.
+ * J. Kohlmorgen, "On Optimal Segmentation of Sequential Data", in
+ * Proceedings of the 13th International IEEE workshop on Neural Networks for
+ * Signal Processing, 2003, pp. 449–458.
+ *
+ * @param distances The pre-computed distance matrix for the vectors of ts
+ * @param C The regularization constant
  */
-template <class DistanceFunctorType>
-class CSegmentation
+template<typename Derived>
+void CSegmentation(const Eigen::MatrixBase<Derived>& distances, double C)
 {
- public:
-  CSegmentation(DistanceFunctorType& distanceFunctor, int W=50, double C=0.0) :
-      distanceFunctor(&distanceFunctor), W(W), C(C) {};
-  virtual ~CSegmentation() {};
+  unsigned T = distances.cols();
 
-  template<typename Derived>
-  void operator()(const Eigen::MatrixBase<Derived>& ts)
-  {
-    unsigned T = ts.rows();
+  // Init t = 1
+  Eigen::MatrixXd opaths(T, T);
+  opaths.col(0) = distances.col(0);
 
-    // Initialize distance  matrix
-    Eigen::MatrixXd distances(T-W, T-W);
-    distances.setZero();
-    std::cout << "Computing distances" << std::endl;
-
-    distanceFunctor->DistanceMatrix(ts, W, distances);
-
-    std::cout << "Done computing distances" << std::endl;
-
-    // Init t=W
-    Eigen::MatrixXd opaths(T-W, T-W);
-    opaths.col(0) = distances.col(0);
-    std::cout << "Initialized t=W" << std::endl;
-
-    // t = W+1
-    for (int t = 1; t < opaths.cols(); t++) {
-      double h = opaths.col(t-1).minCoeff() + C;
-      for (int s = 0; s < opaths.rows(); s++) {
-        opaths(s, t) = (t > s ? distances(t, s) : distances(s, t)) + std::min(opaths(s, t-1), h);
-      }
+  // t = 2..T
+  for (int t = 1; t < opaths.cols(); t++) {
+    double h = opaths.col(t-1).minCoeff() + C;
+    for (int s = 0; s < opaths.rows(); s++) {
+      opaths(s, t) = (t > s ? distances(t, s) : distances(s, t)) + std::min(opaths(s, t-1), h);
     }
-
-    // Termination at t = T
-    //double ofinal = opaths.col(opaths.cols()-1).minCoeff();
   }
 
- protected:
-  DistanceFunctorType* distanceFunctor;
+  // Termination at t = T
+  for (int t = 0; t < opaths.cols(); t++) {
+    int i;
+    opaths.col(t).minCoeff(&i);
+    std::cout << i << std::endl;
+  }
 
-  int W;
-  double C;
+}
 
-};
 
 } // namespace segmentation
 } // namespace rlfd
