@@ -77,7 +77,7 @@ int main(int argc, char** argv)
   // Read the distance matrix
   Eigen::MatrixXd dists;
   if (distance_file != "") {
-    rlfd::utils::Import(distance_file, dists);g
+    rlfd::utils::Import(distance_file, dists);
   }
 
   // Compute the segmentation
