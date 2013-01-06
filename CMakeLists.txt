@@ -32,6 +32,9 @@ TARGET_LINK_LIBRARIES(kohlmorgen-lemm ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -
 ADD_EXECUTABLE(csegmentation src/CSegmentation.cc)
 TARGET_LINK_LIBRARIES(csegmentation ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
 
+ADD_EXECUTABLE(nsegmentation src/NSegmentation.cc)
+TARGET_LINK_LIBRARIES(nsegmentation ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
+
 ADD_EXECUTABLE(gaussiankde src/GaussianKDE.cc)
 TARGET_LINK_LIBRARIES(gaussiankde ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
 
