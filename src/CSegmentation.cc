@@ -29,15 +29,27 @@
 
 void print_usage(void)
 {
-  std::cout << "Execute the C-Segmentation algorithm on the data passed through STDIN" << std::endl;
   std::cout << "Usage: C-Segmentation [OPTION]" << std::endl;
+  std::cout << "Execute the C-Segmentation algorithm on the data passed through STDIN" << std::endl;
+  std::cout << "  -D, --distance-matrix  a file containing the pre-computed all-pairs distances" << std::endl;
+  std::cout << "  -C, --regularizer      the regularization constant that penalizes changes of state" << std::endl;
+  std::cout << "  -h, --help             display this help and exit" << std::endl;
+  std::cout << "\n\nFrom:\nJ. Kohlmorgen, \"On Optimal Segmentation of Sequential Data\", in" << std::endl;
+  std::cout << "Proceedings of the 13th International IEEE workshop on Neural Networks for" << std::endl;
+  std::cout << "Signal Processing, 2003, pp. 449–458." << std::endl;
+  std::cout << "\nAuthor: Pierre-Luc Bacon <pbacon@mail.mcgill.ca>" << std::endl;
+  std::cout << "Report bugs to: https://github.com/pierrelux/rlfd_segmentation" << std::endl;
 }
 
 int main(int argc, char** argv)
 {
+  if (argc == 1) {
+    print_usage();
+    return -1;
+  }
   std::cout.precision(std::numeric_limits<double>::digits10);
 
-  double regularizer = 0;
+  double regularizer = 0.0;
   std::string distance_file;
 
   // Parse arguments
@@ -45,12 +57,13 @@ int main(int argc, char** argv)
   {
     {"distance-matrix", required_argument, 0, 'D'},
     {"regularizer", required_argument, 0, 'C'},
+    {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}
   };
 
   int option_index = 0;
   int c;
-  while ((c = getopt_long(argc, argv, "C:D:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "C:D:h", long_options, &option_index)) != -1)
   {
     switch (c)
     {
@@ -60,18 +73,12 @@ int main(int argc, char** argv)
       case 'D':
         distance_file = std::string(optarg);
         break;
+      case '?':
+      case 'h':
       default:
         print_usage();
         return -1;
     }
-  }
-
-  // Read the embedded input vectorsg
-  Eigen::MatrixXd ts;
-  if (optind < argc) {
-    rlfd::utils::Import(argv[optind], ts);
-  } else {
-    rlfd::utils::Import(ts);
   }
 
   // Read the distance matrix
