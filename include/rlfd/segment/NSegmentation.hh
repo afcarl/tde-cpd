@@ -17,8 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  */
-#ifndef __CSEGMENTATION_HH__
-#define __CSEGMENTATION_HH__
+#ifndef __NSEGMENTATION_HH__
+#define __NSEGMENTATION_HH__
 
 #include <rlfd/Model.hh>
 #include <rlfd/delay/DelayEmbedding.hh>
