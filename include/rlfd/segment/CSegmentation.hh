@@ -45,6 +45,7 @@ void CSegmentation(const Eigen::MatrixBase<Derived>& distances, double C)
 
   // Init t = 1
   Eigen::MatrixXd opaths(T, T);
+  opaths.setZero();
   opaths.col(0) = distances.col(0);
 
   // t = 2..T
