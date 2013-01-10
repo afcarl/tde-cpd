@@ -35,6 +35,9 @@ TARGET_LINK_LIBRARIES(csegmentation ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz
 ADD_EXECUTABLE(nsegmentation src/NSegmentation.cc)
 TARGET_LINK_LIBRARIES(nsegmentation ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
 
+ADD_EXECUTABLE(lower-intersection src/LowerIntersection.cc)
+TARGET_LINK_LIBRARIES(lower-intersection ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
+
 ADD_EXECUTABLE(gaussiankde src/GaussianKDE.cc)
 TARGET_LINK_LIBRARIES(gaussiankde ${FLANN_LIBS} ${FFTW_LIBRARIES} "-lmatio -lz")
 
