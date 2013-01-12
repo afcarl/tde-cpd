@@ -29,10 +29,13 @@
 
 void print_usage(void)
 {
-  std::cerr << "Transform a scalar time series into delay vectors of dimension m." << std::endl;
-  std::cerr << "Usage: delay-embedding [OPTION] [FILE]" << std::endl;
-  std::cerr << "  -m --dimension    The Embedding dimension." << std::endl;
-  std::cerr << "  -l --lag          The lag value." << std::endl; 
+  std::cout << "Usage: delay-embedding [OPTION] [FILE]" << std::endl;
+  std::cout << "Transform a scalar time series into delay vectors of dimension m." << std::endl;
+  std::cout << "  -m, --dimension    the embedding dimension" << std::endl;
+  std::cout << "  -d, --delay        the lag value" << std::endl;
+  std::cout << "  -h, --help        display this help and exit" << std::endl;
+  std::cout << "\nAuthor: Pierre-Luc Bacon <pbacon@mail.mcgill.ca>" << std::endl;
+  std::cout << "Report bugs to: https://github.com/pierrelux/rlfd_segmentation" << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -44,22 +47,25 @@ int main(int argc, char** argv)
   static struct option long_options[] =
   {
     {"dimension", required_argument, 0, 'm'},
-    {"lag", required_argument, 0, 'l'},
+    {"delay", required_argument, 0, 'd'},
+    {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}
   };
 
   int option_index = 0;
   int c;
-  while ((c = getopt_long(argc, argv, "m:l:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "m:d:h", long_options, &option_index)) != -1)
   {
     switch (c)
     {
       case 'm' :
         embedding_dimension = std::stoi(optarg);
         break;
-      case 'l' :
+      case 'd' :
         lag = std::stoi(optarg);
         break;
+      case '?':
+      case 'h':
       default:
         print_usage();
         return -1;
@@ -76,7 +82,7 @@ int main(int argc, char** argv)
 
   // Delay embedding
   Eigen::MatrixXd out;
-  rlfd::delay::DelayEmbedding::Embed(ts, embedding_dimension, lag, out); 
+  rlfd::delay::DelayEmbedding::Embed(ts, embedding_dimension, lag, out);
   std::cout.precision(std::numeric_limits<double>::digits10);
   std::cout << out << std::endl;
 
