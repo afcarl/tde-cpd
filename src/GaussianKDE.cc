@@ -28,12 +28,26 @@
 
 void print_usage(void)
 {
+  std::cout << "Usage: gaussiankde [OPTION] [FILE]" << std::endl;
   std::cout << "Compute the full distance matrix between all pair of points." << std::endl;
-  std::cout << "Usage: gaussiankde [OPTION]" << std::endl;
+  std::cout << "  -w, --window      the window size in which the PDF should be estimated" << std::endl;
+  std::cout << "  -s, --sigma       the sigma constant in the expression of the Gaussian density" << std::endl;
+  std::cout << "  -h, --help        display this help and exit" << std::endl;
+  std::cout << "      --calibrate   estimate the appropriate value for the sigma parameter" << std::endl;
+  std::cout << "\n\nFrom:\nJ. Kohlmorgen, \"On Optimal Segmentation of Sequential Data\", in" << std::endl;
+  std::cout << "Proceedings of the 13th International IEEE workshop on Neural Networks for" << std::endl;
+  std::cout << "Signal Processing, 2003, pp. 449–458." << std::endl;
+  std::cout << "\nAuthor: Pierre-Luc Bacon <pbacon@mail.mcgill.ca>" << std::endl;
+  std::cout << "Report bugs to: https://github.com/pierrelux/rlfd_segmentation" << std::endl;
 }
 
 int main(int argc, char** argv)
 {
+  if (argc == 1) {
+    print_usage();
+    return -1;
+  }
+
   std::cout.precision(std::numeric_limits<double>::digits10);
 
   int W = 50;
@@ -46,12 +60,13 @@ int main(int argc, char** argv)
     {"calibrate", no_argument, &calibrate_flag, 1},
     {"window", required_argument, 0, 'w'},
     {"sigma", required_argument, 0, 's'},
+    {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}
   };
 
   int option_index = 0;
   int c;
-  while ((c = getopt_long(argc, argv, "w:s:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "w:s:h", long_options, &option_index)) != -1)
   {
     switch (c)
     {
@@ -64,7 +79,7 @@ int main(int argc, char** argv)
         sigma = std::stod(optarg);
         break;
       case '?':
-        break;
+      case 'h':
       default:
         print_usage();
         return -1;
