@@ -12,26 +12,39 @@ mackeyGlass <- function(t, y, parms, tau) {
     ylag <- lagvalue(tlag)
 
   dy <- 0.2 * ylag * 1/(1+ylag^10) - 0.1 * y
-  list(dy = dy, ylag = ylag)
+  list(c(dy))
 }
 
-
-# Generate mackey-glass attractors with different modes
+# Generate mackey-glass attractors with different delays
+tmax = 500
 yinit <- 0.5
-tauValues <- sample(c(17, 23, 30, 35))
-durations <- sample(200:300, 4)
+tauValues <- c(17, 23, 30, 35)
+nmodes = length(tauValues)
+attractors <- matrix(0, nmodes, tmax/0.1 + 1)
 
-xseries <- numeric()
-for(i in 1:length(tauValues)) {
-  times <- seq(from = 0, to = durations[i], by = 0.1)
-
-  x <- dede(y = yinit, times = times, func = mackeyGlass, parms = NULL, tau = tauValues[i])
-  xseries <- c(xseries, x[, 2])
+for(i in 1:nmodes) {
+  times <- seq(from = 0, to = tmax, by = 0.1)
+  y <- dede(y = yinit, times = times, func = mackeyGlass, parms = NULL, tau = tauValues[i])
+  attractors[i,] = y[, 2]
 }
+# Subsample
+#attractors <- attractors[,seq(from = 1, to = ncol(attractors), by = 10)]
+
+# Randomize the duration
+nsegments = 15
+#durations <- sample(200:300, nsegments)
+durations <- rep(ncol(attractors), nsegments)
+modes <- sample(1:4, nsegments, replace=TRUE)
+
+switchingSeries <- numeric()
+for (i in 1:nsegments) {
+ switchingSeries <- c(switchingSeries, attractors[modes[i], 1:durations[i]])
+}
+
+# Merge the rows in one vector
+attractors.df <- data.frame(y=switchingSeries, time=1:length(switchingSeries))
 
 # Add measurement noise
-noise <- rnorm(length(xseries), mean=0.0, sd=sd(xseries)*0.3)
-xseries = xseries #+ noise
+#noise <- rnorm(length(xseries), mean=0.0, sd=sd(xseries)*0.3)
 
-# Plot
-plot(xseries, type="l")
+ggplot(attractors.df, aes(x=time, y=y)) + geom_line() + geom_vline(xintercept=cumsum(durations), color="blue", linetype="longdash")
