@@ -1,20 +1,7 @@
 #About 
-I am currently working on my master's thesis under the supervision 
-of Professor Doina Precup in the Reasoning and Learning Laboratory.
-
-Reinforcement learning has proven to be a powerful approach for solving 
-many sequential decision making problems. Robotics lends itself also quite
-naturally to RL which considers the process of acquiring knowledge through 
-the interaction of an agent with its environment. My research goal is to 
-create RL-based systems that could leverage the knowledge of a robot teacher
-through demonstrations. More precisely, I'm interested in the problem of
- hierchical subtask decompositions from demonstrations for options learning.
-
-Given a demonstration, we would want an RL agent to find meaningful subtask
-boundaries and learn a corresponding consistent set of options.
-
-#Visit 
-http://cs.mcgill.ca/~pbacon/
+This repo contains implementations of various algorithms related to time delay
+embedding for non-linear time series analysis. The interest in those techniques 
+lies in their potential use for change-point detection.
 
 #License
 Copyright (C) 2012  Pierre-Luc Bacon 
